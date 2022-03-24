@@ -1,5 +1,5 @@
 # peg-bootstrap
-A PEG that compiles itself.
+A PEG that compiles itself: Kragen's [original writeup](peg.md).
 
 The `guido` directory contains a tweaked version of kragen's output.js
 that is prettified and a tweaked PEG file to complement those changes.
