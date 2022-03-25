@@ -1,0 +1,67 @@
+sp <- ' ' / '\n' / '\t' .
+_ <-sp _ / .
+rule <- n: name _ '<-'_ body: choice '.'_ ->
+               (`State parse_${n}(str input, int pos) {
+                     State state = { .pos=pos, .valid=true };
+                     Stack stack;
+                     ${body}
+                     return state;
+                }`).
+sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
+          / _ r: rule -> (`${r}
+                State parse_char(str input, int pos) {
+                  if (pos >= gb_string_length(input)) return (State){.valid=false};
+                  return (State){ .pos=pos+1, .val=input[pos], .valid=true };
+                }
+                State literal(str input, int pos, str string) {
+		  int n = gb_string_length(string);
+		  if (strncmp(&input[pos], string, n) == 0) {
+                    return (State){ .pos=pos+n, .val=string };
+                  } else return (State){ .valid=false };
+                }
+                FILE f = open("c.peg", "r");
+		str buf = gb_make_string_length("", 65536);
+		if (fread(buf, sizeof(*buf), 65536, f) > 0) {
+		    state s = parse_sentence(buf, 0);
+		    printf("%s\n", s.val);
+		}
+                );`
+            ).
+meta     <- '!' / '\'' / '<-' / '/' / '.' / '(' / ')' / ':' / '->'.
+name     <- c: namechar n: name -> (c + n) / namechar.
+namechar <- !meta !sp char.
+term <- labeled / nonterminal / string / negation / parenthesized.
+nonterminal <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`).
+labeled <- label: name _ ':'_ value: term ->
+               (`${value} if (state.valid) var ${label} = state.val;\n`) .
+sequence <- foo: term  bar: sequence ->
+                   (`${foo}  if (state.valid) { ${bar} }\n`)
+               / result_expression / -> ('').
+string <- '\'' s: stringcontents '\''_ ->
+             (`  state = literal(input, state.pos, '${s}');\n`) .
+stringcontents <-   !'\\' !'\'' c: char  s: stringcontents -> (c + s)
+                / b: '\\'       c: char  s: stringcontents -> (b + c + s)
+                / -> ('').
+choice <- a: sequence '/'_  b: choice ->
+                  (`  push(state);
+                      ${a}
+                      if (!state) {
+                        state = pop();
+                        ${b}
+                      } else { pop(); }`)
+              / sequence.
+negation <- '!'_ t: term ->
+                (`push(state);
+                  ${t}
+                  if (state.valid) {
+                    pop();
+                    state = { .valid=false };
+                  } else { state = pop(); }`).
+
+result_expression <- '->'_ result: expr _ ->
+                         (`if (state.valid) state.val = ${result};\n`)
+                     .
+expr         <- '('_ e: exprcontents ')' -> (`(${e})`).
+exprcontents <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
+              / -> ('').
+parenthesized <- '('_ body: choice ')'_ -> (body).
