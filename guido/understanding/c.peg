@@ -23,10 +23,9 @@ sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
                   } else return null();
                 }
                 
-                str = read();
+                str = read(argv[1]);
                 State out = parse_sentence(src, 0);                
                 printf("%s\n", out.val);
-                    
                 `
             ).
 meta     <- '!' / '\'' / '<-' / '/' / '.' / '(' / ')' / ':' / '->'.
