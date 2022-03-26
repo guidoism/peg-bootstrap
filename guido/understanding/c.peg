@@ -45,20 +45,20 @@ stringcontents <-   !'\\' !'\'' c: char  s: stringcontents -> (c + s)
                 / b: '\\'       c: char  s: stringcontents -> (b + c + s)
                 / -> ('').
 choice <- a: sequence '/'_  b: choice ->
-                  (`  stack.push(state);
+                  (`  push(state);
                       ${a}
                       if (!state.valid) {
-                        state = stack.pop();
+                        state = pop();
                         ${b}
-                      } else { stack.pop(); }`)
+                      } else { pop(); }`)
               / sequence.
 negation <- '!'_ t: term ->
-                (`stack.push(state);
+                (`push(state);
                   ${t}
-                  if (state) {
-                    stack.pop();
-                    state = null;
-                  } else { state = stack.pop(); }`).
+                  if (state.valid) {
+                    pop();
+                    state = null();
+                  } else { state = pop(); }`).
 
 result_expression <- '->'_ result: expr _ ->
                          (`if (state.valid) state.val = ${result};\n`)
