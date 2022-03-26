@@ -126,7 +126,8 @@ function parse_sentence(input, pos) {
                   } else return null;
                 }
                 var fs = require(\'fs\');
-                fs.readFile(__dirname + \'/c.peg\', function(err, data) {
+                var grammarfile = process.argv.slice(2)[0];
+                fs.readFile(grammarfile, function(err, data) {
                     if (err) {
                         throw err; 
                     }
@@ -741,7 +742,8 @@ function literal(input, pos, string) {
     else return null;
 }
 var fs = require('fs');
-fs.readFile(__dirname + '/c.peg', function(err, data) {
+var grammarfile = process.argv.slice(2)[0];
+fs.readFile(grammarfile, function(err, data) {
     if (err) {
         throw err;
     }

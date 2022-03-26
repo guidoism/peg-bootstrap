@@ -1,16 +1,14 @@
 sp <- ' ' / '\n' / '\t' .
 _ <-sp _ / .
 rule <- n: name _ '<-'_ body: choice '.'_ ->
-               (`State parse_${n}(str input, int pos) {
-	             // From c1.peg
-                     State state = { .pos=pos, .valid=true };
-                     Stack stack;
+               (`function parse_${n}(input, pos) {
+                     var state = { pos: pos };
+                     var stack = [];
                      ${body}
                      return state;
                 }`).
 sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
           / _ r: rule -> (`${r}
-	        // From c1.peg
                 function parse_char(input, pos) {
                   if (pos >= input.length) return null;
                   return { pos: pos + 1, val: input.charAt(pos) };
@@ -21,8 +19,7 @@ sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
                   } else return null;
                 }
                 var fs = require(\'fs\');
-		var grammarfile = process.argv.slice(2)[0];
-		console.log(\`// Reading ${grammarfile}\`);
+                var grammarfile = process.argv.slice(2)[0];
                 fs.readFile(grammarfile, function(err, data) {
                     if (err) {
                         throw err; 
@@ -37,33 +34,33 @@ namechar <- !meta !sp char.
 term <- labeled / nonterminal / string / negation / parenthesized.
 nonterminal <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`).
 labeled <- label: name _ ':'_ value: term ->
-               (`${value} if (state.valid) var ${label} = state.val;\n`) .
+               (`${value} if (state) var ${label} = state.val;\n`) .
 sequence <- foo: term  bar: sequence ->
-                   (`${foo}  if (state.valid) { ${bar} }\n`)
+                   (`${foo}  if (state) { ${bar} }\n`)
                / result_expression / -> ('').
 string <- '\'' s: stringcontents '\''_ ->
-             (`  state = literal(input, state.pos, "${s}");\n`) .
+             (`  state = literal(input, state.pos, '${s}');\n`) .
 stringcontents <-   !'\\' !'\'' c: char  s: stringcontents -> (c + s)
                 / b: '\\'       c: char  s: stringcontents -> (b + c + s)
                 / -> ('').
 choice <- a: sequence '/'_  b: choice ->
-                  (`  push(state);
+                  (`  stack.push(state);
                       ${a}
                       if (!state) {
-                        state = pop();
+                        state = stack.pop();
                         ${b}
-                      } else { pop(); }`)
+                      } else { stack.pop(); }`)
               / sequence.
 negation <- '!'_ t: term ->
-                (`push(state);
+                (`stack.push(state);
                   ${t}
                   if (state) {
-                    pop();
+                    stack.pop();
                     state = null;
-                  } else { state = pop(); }`).
+                  } else { state = stack.pop(); }`).
 
 result_expression <- '->'_ result: expr _ ->
-                         (`if (state.valid) state.val = ${result};\n`)
+                         (`if (state) state.val = ${result};\n`)
                      .
 expr         <- '('_ e: exprcontents ')' -> (`(${e})`).
 exprcontents <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)

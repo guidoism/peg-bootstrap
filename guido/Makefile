@@ -6,6 +6,7 @@ kragen.js:
 
 .PHONY: c
 c:
-	node c1.js > /tmp/c2.js
-	js-beautify --end-with-newline --brace-style=end-expand /tmp/c2.js > /tmp/c2b.js
-	node /tmp/c2b.js
+	node c0.js c0.peg > /tmp/c1.js
+	js-beautify --end-with-newline --brace-style=end-expand /tmp/c1.js > /tmp/c1b.js
+	node /tmp/c1b.js c2.peg | clang-format -style='{IndentWidth: 4}' > /tmp/c2.c
+
