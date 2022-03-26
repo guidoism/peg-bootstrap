@@ -35,19 +35,19 @@ namechar <- !meta !sp char.
 term <- labeled / nonterminal / string / negation / parenthesized.
 nonterminal <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`).
 labeled <- label: name _ ':'_ value: term ->
-               (`${value} if (state) var ${label} = state.val;\n`) .
+               (`${value} if (state.valid) str ${label} = state.val;\n`) .
 sequence <- foo: term  bar: sequence ->
-                   (`${foo}  if (state) { ${bar} }\n`)
+                   (`${foo}  if (state.valid) { ${bar} }\n`)
                / result_expression / -> ('').
 string <- '\'' s: stringcontents '\''_ ->
-             (`  state = literal(input, state.pos, '${s}');\n`) .
+             (`  state = literal(input, state.pos, "${s}");\n`) .
 stringcontents <-   !'\\' !'\'' c: char  s: stringcontents -> (c + s)
                 / b: '\\'       c: char  s: stringcontents -> (b + c + s)
                 / -> ('').
 choice <- a: sequence '/'_  b: choice ->
                   (`  stack.push(state);
                       ${a}
-                      if (!state) {
+                      if (!state.valid) {
                         state = stack.pop();
                         ${b}
                       } else { stack.pop(); }`)
@@ -61,7 +61,7 @@ negation <- '!'_ t: term ->
                   } else { state = stack.pop(); }`).
 
 result_expression <- '->'_ result: expr _ ->
-                         (`if (state) state.val = ${result};\n`)
+                         (`if (state.valid) state.val = ${result};\n`)
                      .
 expr         <- '('_ e: exprcontents ')' -> (`(${e})`).
 exprcontents <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
