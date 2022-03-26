@@ -137,8 +137,7 @@ function parse_sentence(input, pos) {
                 
                 str = read(argv[1]);
                 State out = parse_sentence(src, 0);                
-                printf("%s\n", out.val);
-                    
+                printf("%s\\n", out.val);
                 `);
             }
         }
@@ -395,7 +394,7 @@ function parse_labeled(input, pos) {
                     state = parse_term(input, state.pos);
                     if (state) var value = state.val;
                     if (state) {
-                        if (state) state.val = (`${value} if (state.valid) str ${label} = state.val;\n`);
+                        if (state) state.val = (`${value} if (state.valid) { str ${label} = state.val; }\n`);
                     }
                 }
             }
@@ -621,7 +620,7 @@ function parse_result_expression(input, pos) {
             if (state) {
                 state = parse__(input, state.pos);
                 if (state) {
-                    if (state) state.val = (`if (state.valid) state.val = ${result};\n`);
+                    if (state) state.val = (`if (state.valid) { state.val = ${result} };\n`);
                 }
             }
         }

@@ -25,7 +25,7 @@ sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
                 
                 str = read(argv[1]);
                 State out = parse_sentence(src, 0);                
-                printf("%s\n", out.val);
+                printf("%s\\n", out.val);
                 `
             ).
 meta     <- '!' / '\'' / '<-' / '/' / '.' / '(' / ')' / ':' / '->'.
@@ -34,7 +34,7 @@ namechar <- !meta !sp char.
 term <- labeled / nonterminal / string / negation / parenthesized.
 nonterminal <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`).
 labeled <- label: name _ ':'_ value: term ->
-               (`${value} if (state.valid) str ${label} = state.val;\n`) .
+               (`${value} if (state.valid) { str ${label} = state.val; }\n`) .
 sequence <- foo: term  bar: sequence ->
                    (`${foo}  if (state.valid) { ${bar} }\n`)
                / result_expression / -> ('').
@@ -60,7 +60,7 @@ negation <- '!'_ t: term ->
                   } else { state = pop(); }`).
 
 result_expression <- '->'_ result: expr _ ->
-                         (`if (state.valid) state.val = ${result};\n`)
+                         (`if (state.valid) { state.val = ${result} };\n`)
                      .
 expr         <- '('_ e: exprcontents ')' -> (`(${e})`).
 exprcontents <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
