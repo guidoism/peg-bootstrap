@@ -1,8 +1,10 @@
+// This is from a template in 0.js
 function parse_sp(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = literal(input, state.pos, ' ');
     if (state) {}
@@ -29,11 +31,13 @@ function parse_sp(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse__(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse_sp(input, state.pos);
     if (state) {
@@ -51,11 +55,13 @@ function parse__(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_rule(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = parse_name(input, state.pos);
     if (state) var n = state.val;
     if (state) {
@@ -72,9 +78,11 @@ function parse_rule(input, pos) {
                         if (state) {
                             state = parse__(input, state.pos);
                             if (state) {
-                                if (state) state.val = (`function parse_${n}(input, pos) {
+                                if (state) state.val = (`// This is from a template in a.peg
+               function parse_${n}(input, pos) {
                      var state = { pos: pos };
                      var stack = [];
+                     // Not sure where this body is coming from
                      ${body}
                      return state;
                 }`);
@@ -89,11 +97,13 @@ function parse_rule(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_sentence(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse__(input, state.pos);
     if (state) {
@@ -115,7 +125,9 @@ function parse_sentence(input, pos) {
             state = parse_rule(input, state.pos);
             if (state) var r = state.val;
             if (state) {
-                if (state) state.val = (`${r}
+                if (state) state.val = (`// This is from a template in a.peg, variable r is next:
+                ${r}
+                // This is from a template in a.peg, just finished with variable r
                 function parse_char(input, pos) {
                   if (pos >= input.length) return null;
                   return { pos: pos + 1, val: input.charAt(pos) };
@@ -144,11 +156,13 @@ function parse_sentence(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_meta(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = literal(input, state.pos, '!');
     if (state) {}
@@ -235,11 +249,13 @@ function parse_meta(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_name(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse_namechar(input, state.pos);
     if (state) var c = state.val;
@@ -263,11 +279,13 @@ function parse_name(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_namechar(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse_meta(input, state.pos);
 
@@ -298,11 +316,13 @@ function parse_namechar(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_term(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse_labeled(input, state.pos);
     if (state) {}
@@ -349,11 +369,13 @@ function parse_term(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_nonterminal(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = parse_name(input, state.pos);
     if (state) var n = state.val;
     if (state) {
@@ -366,11 +388,13 @@ function parse_nonterminal(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_labeled(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = parse_name(input, state.pos);
     if (state) var label = state.val;
     if (state) {
@@ -393,11 +417,13 @@ function parse_labeled(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_sequence(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse_term(input, state.pos);
     if (state) var foo = state.val;
@@ -430,11 +456,13 @@ function parse_sequence(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_string(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = literal(input, state.pos, '\'');
     if (state) {
         state = parse_stringcontents(input, state.pos);
@@ -453,11 +481,13 @@ function parse_string(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_stringcontents(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     stack.push(state);
     state = literal(input, state.pos, '\\');
@@ -525,11 +555,13 @@ function parse_stringcontents(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_choice(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     state = parse_sequence(input, state.pos);
     if (state) var a = state.val;
@@ -564,11 +596,13 @@ function parse_choice(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_negation(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = literal(input, state.pos, '!');
     if (state) {
         state = parse__(input, state.pos);
@@ -589,11 +623,13 @@ function parse_negation(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_result_expression(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = literal(input, state.pos, '->');
     if (state) {
         state = parse__(input, state.pos);
@@ -612,11 +648,13 @@ function parse_result_expression(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_expr(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = literal(input, state.pos, '(');
     if (state) {
         state = parse__(input, state.pos);
@@ -635,11 +673,13 @@ function parse_expr(input, pos) {
     return state;
 }
 
+// This is from a template in 0.js
 function parse_exprcontents(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     stack.push(state);
     stack.push(state);
     stack.push(state);
@@ -697,12 +737,15 @@ function parse_exprcontents(input, pos) {
     }
     return state;
 }
+// This is from a template in 0.js, variable r is next:
 
+// This is from a template in 0.js
 function parse_parenthesized(input, pos) {
     var state = {
         pos: pos
     };
     var stack = [];
+    // Not sure where this body is coming from
     state = literal(input, state.pos, '(');
     if (state) {
         state = parse__(input, state.pos);
@@ -723,7 +766,7 @@ function parse_parenthesized(input, pos) {
 
     return state;
 }
-
+// This is from a template in 0.js, just finished with variable r
 function parse_char(input, pos) {
     if (pos >= input.length) return null;
     return {

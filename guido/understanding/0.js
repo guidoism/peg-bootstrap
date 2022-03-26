@@ -72,9 +72,12 @@ function parse_rule(input, pos) {
                         if (state) {
                             state = parse__(input, state.pos);
                             if (state) {
-                                if (state) state.val = (`function parse_${n}(input, pos) {
+                                if (state) state.val = (`
+                     // This is from a template in 0.js
+                     function parse_${n}(input, pos) {
                      var state = { pos: pos };
                      var stack = [];
+                     // Not sure where this body is coming from
                      ${body}
                      return state;
                 }`);
@@ -115,7 +118,9 @@ function parse_sentence(input, pos) {
             state = parse_rule(input, state.pos);
             if (state) var r = state.val;
             if (state) {
-                if (state) state.val = (`${r}
+                if (state) state.val = (`// This is from a template in 0.js, variable r is next:
+                ${r}
+                // This is from a template in 0.js, just finished with variable r
                 function parse_char(input, pos) {
                   if (pos >= input.length) return null;
                   return { pos: pos + 1, val: input.charAt(pos) };

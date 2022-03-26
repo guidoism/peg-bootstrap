@@ -1,7 +1,7 @@
 sp <- ' ' / '\n' / '\t' .
-_ <-sp _ / .
+_ <- sp _ / .
 rule <- n: name _ '<-'_ body: choice '.'_ ->
-               (`// This is from a template in a.peg
+               (`// This is from a template in b.peg
                function parse_${n}(input, pos) {
                      var state = { pos: pos };
                      var stack = [];
@@ -10,9 +10,9 @@ rule <- n: name _ '<-'_ body: choice '.'_ ->
                      return state;
                 }`).
 sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
-          / _ r: rule -> (`// This is from a template in a.peg, variable r is next:
+          / _ r: rule -> (`// This is from a template in b.peg, variable r is next:
                 ${r}
-                // This is from a template in a.peg, just finished with variable r
+                // This is from a template in b.peg, just finished with variable r
                 function parse_char(input, pos) {
                   if (pos >= input.length) return null;
                   return { pos: pos + 1, val: input.charAt(pos) };

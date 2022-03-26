@@ -1,36 +1,33 @@
 sp <- ' ' / '\n' / '\t' .
-_ <-sp _ / .
+_ <- sp _ / .
 rule <- n: name _ '<-'_ body: choice '.'_ ->
-               (`// This is from a template in a.peg
-               function parse_${n}(input, pos) {
-                     var state = { pos: pos };
-                     var stack = [];
+               (`// This is from a template in c.peg
+               State parse_${n}(str input, int pos) {
+                     State state = { .pos=pos, .valid=true };
+                     Stack stack = { 0 };
                      // Not sure where this body is coming from
                      ${body}
                      return state;
                 }`).
 sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
-          / _ r: rule -> (`// This is from a template in a.peg, variable r is next:
+          / _ r: rule -> (`// This is from a template in c.peg, variable r is next:
                 ${r}
-                // This is from a template in a.peg, just finished with variable r
-                function parse_char(input, pos) {
-                  if (pos >= input.length) return null;
-                  return { pos: pos + 1, val: input.charAt(pos) };
+                // This is from a template in c.peg, just finished with variable r
+                State parse_char(str input, int pos) {
+                  if (pos >= len(input)) return null();
+                  return (State){ .pos=pos+1, .val=input[pos], valid=true };
                 }
-                function literal(input, pos, string) {
-                  if (input.substr(pos, string.length) === string) {
-                    return { pos: pos + string.length, val: string };
-                  } else return null;
+                State literal(str input, int pos, str string) {
+                  if (strncmp(&input[pos], string, len(string) == 0)) {
+                    return { .pos=pos+len(string), .val=string, .valid=true };
+                  } else return null();
                 }
-                var fs = require(\'fs\');
-                var grammarfile = process.argv.slice(2)[0];
-                fs.readFile(grammarfile, function(err, data) {
-                    if (err) {
-                        throw err; 
-                    }
-                    var out = parse_sentence(data.toString(), 0);
-                    console.log(out.val);
-                });`
+                
+                str = read();
+                State out = parse_sentence(src, 0);                
+                printf("%s\n", out.val);
+                    
+                `
             ).
 meta     <- '!' / '\'' / '<-' / '/' / '.' / '(' / ')' / ':' / '->'.
 name     <- c: namechar n: name -> (c + n) / namechar.
