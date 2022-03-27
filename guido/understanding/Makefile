@@ -4,6 +4,6 @@ all:
 	node 1.js a.peg | js-beautify --end-with-newline --brace-style=end-expand - > 2.js
 	node 2.js b.peg | js-beautify --end-with-newline --brace-style=end-expand - > 3.js
 	node 3.js c.peg | js-beautify --end-with-newline --brace-style=end-expand - > 4.js
-	node 4.js d.peg | clang-format -style='{IndentWidth: 4}' > 5.c
-
-
+	echo "#include \"head.h\"" > 5.c
+	node 4.js d.peg | clang-format -style='{IndentWidth: 4}' >> 5.c
+	clang -std=c11 5.c -o 5.out

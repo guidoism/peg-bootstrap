@@ -80,6 +80,7 @@ function parse_rule(input, pos) {
                State parse_${n}(str input, int pos) {
                      State state = { .pos=pos, .valid=true };
                      Stack stack = { 0 };
+	             Variables vars = { 0 };
                      // Not sure where this body is coming from
                      ${body}
                      return state;

@@ -9,27 +9,12 @@ typedef struct State {
   int pos;
   str val;
   bool valid;
-  // TODO: Add a hash table for variables to be used later since C
-  // scoping rules don't make the existing code work? Because we
-  // blast through the existing state over and over maybe this won't
-  // work right away. We could instead create a new variable at the
-  // top of each function that holds variables for the duration of
-  // the function. It doesn't even need to hold the names, just the
-  // values in order -- As long as we use them the same order then
-  // we can format them in the same way. This should also make the
-  // varidic format functions easier to write.
 } State;
 
 typedef struct Stack {
   State items[16];
   int top;
 } Stack;
-
-typedef struct OldVariable {
-  str name;
-  str value;
-  struct Variable* next;
-} OldVariable;
 
 typedef struct Variables {
   str names[16];
@@ -41,8 +26,6 @@ typedef struct Variables {
 #define pop() stack.items[stack.top--]
 #define newstr(n) gb_make_string_length("", n)
 #define len(s) gb_string_length(s)
-//#define remember(k, v) { Variable* var = (Variable*)malloc(sizeof(Variable)); \
-//  var->name = gb_make_string(k); var->value = gb_make_string(v); }
 #define remember(k, v) { vars.names[vars.n] = gb_make_string(k); \
   vars.values[vars.n] = gb_make_string(v); \
   vars.n += 1; }
@@ -61,22 +44,13 @@ str replace(str src, str key, str value) {
   return s;
 }
 
-/*
-str format(const char * fmt, Variable * variables) {
-  //for (Variable * v = variables; v; v = v.next) {
-  //  format1()
-  //}
-  
-  //size_t n = strlen(fmt);
-  //for (Variable * v = variables; v; v = v.next) {
-  //  n += strlen(v.value);
-  //}
-  //str s = gb_make_string_length(fmt, n);
-  //for (Variable * v = variables; v; v = v.next) {
-  //}
-  return NULL;
+str format(char * fmt, Variables * vars) {
+  str s;
+  for (size_t i = 0; i < vars->n; i++) {
+    s = replace(fmt, vars->names[i], vars->values[i]);
+  }
+  return s;
 }
-*/
 
 // TODO: Figure out how to use macros to make these shorter
 str format1(const char * fmt, const char * a) {
