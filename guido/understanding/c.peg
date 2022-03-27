@@ -34,7 +34,7 @@ namechar <- !meta !sp char.
 term <- labeled / nonterminal / string / negation / parenthesized.
 nonterminal <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`).
 labeled <- label: name _ ':'_ value: term ->
-               (`${value} if (state.valid) { str ${label} = state.val; }\n`) .
+               (`${value} if (state.valid) { remember("${label}", state.val); }\n`) .
 sequence <- foo: term  bar: sequence ->
                    (`${foo}  if (state.valid) { ${bar} }\n`)
                / result_expression / -> ('').

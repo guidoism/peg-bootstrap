@@ -1,14 +1,14 @@
 sp <- ' ' / '\n' / '\t' .
 _ <- sp _ / .
 rule <- n: name _ '<-'_ body: choice '.'_ ->
-               (format2("// This is from a template in d.peg\n"
-               "State parse_%s(str input, int pos) {\n"
+               (format("// This is from a template in d.peg\n"
+               "State parse_${n}(str input, int pos) {\n"
                "      State state = { .pos=pos, .valid=true };\n"
                "      Stack stack = { 0 };\n"
                "      // Not sure where this body is coming from\n"
-               "      %s\n"
+               "      ${body}\n"
                "      return state;\n"
-               "}", n, body)).
+               "}", variables)).
 sentence <- _ r: rule g: sentence -> (format2("%s\n%s", r, g ))
           / _ r: rule -> (format1("// This is from a template in d.peg, variable r is next:\n"
                " %s\n"
@@ -34,7 +34,7 @@ namechar <- !meta !sp char.
 term <- labeled / nonterminal / string / negation / parenthesized.
 nonterminal <- n: name _ -> (format1(" state = parse_%s(input, state.pos);\n", n)).
 labeled <- label: name _ ':'_ value: term ->
-               (format2("%s if (state.valid) { str %s = state.val; } \n", value, label)) .
+               (format2("%s if (state.valid) { remember(\"%s\", state.val); } \n", value, label)) .
 sequence <- foo: term  bar: sequence ->
                    (format2("%s if (state.valid) { %s }\n", foo, bar))
                / result_expression / -> ("").

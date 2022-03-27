@@ -394,7 +394,7 @@ function parse_labeled(input, pos) {
                     state = parse_term(input, state.pos);
                     if (state) var value = state.val;
                     if (state) {
-                        if (state) state.val = (`${value} if (state.valid) { str ${label} = state.val; }\n`);
+                        if (state) state.val = (`${value} if (state.valid) { remember("${label}", state.val); }\n`);
                     }
                 }
             }

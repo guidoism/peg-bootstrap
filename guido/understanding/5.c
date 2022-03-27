@@ -59,7 +59,7 @@ State parse_rule(str input, int pos) {
     // Not sure where this body is coming from
     state = parse_name(input, state.pos);
     if (state.valid) {
-        str n = state.val;
+        remember("n", state.val);
     }
     if (state.valid) {
         state = parse__(input, state.pos);
@@ -70,7 +70,7 @@ State parse_rule(str input, int pos) {
                 if (state.valid) {
                     state = parse_choice(input, state.pos);
                     if (state.valid) {
-                        str body = state.val;
+                        remember("body", state.val);
                     }
                     if (state.valid) {
                         state = literal(input, state.pos, ".");
@@ -78,18 +78,19 @@ State parse_rule(str input, int pos) {
                             state = parse__(input, state.pos);
                             if (state.valid) {
                                 if (state.valid) {
-				  state.val = format2(
+                                    state.val = (format(
                                         "// This is from a template in d.peg\n"
-                                        "State parse_%s(str input, int pos) {\n"
+                                        "State parse_${n}(str input, int pos) "
+                                        "{\n"
                                         "      State state = { .pos=pos, "
                                         ".valid=true };\n"
                                         "      Stack stack = { 0 };\n"
                                         "      // Not sure where this body is "
                                         "coming from\n"
-                                        "      %s\n"
+                                        "      ${body}\n"
                                         "      return state;\n"
                                         "}",
-                                        n, body);
+                                        variables))
                                 };
                             }
                         }
@@ -111,12 +112,12 @@ State parse_sentence(str input, int pos) {
     if (state.valid) {
         state = parse_rule(input, state.pos);
         if (state.valid) {
-            str r = state.val;
+            remember("r", state.val);
         }
         if (state.valid) {
             state = parse_sentence(input, state.pos);
             if (state.valid) {
-                str g = state.val;
+                remember("g", state.val);
             }
             if (state.valid) {
                 if (state.valid) {
@@ -132,7 +133,7 @@ State parse_sentence(str input, int pos) {
         if (state.valid) {
             state = parse_rule(input, state.pos);
             if (state.valid) {
-                str r = state.val;
+                remember("r", state.val);
             }
             if (state.valid) {
                 if (state.valid) { state.val = (format1("// This is from a template in d.peg, variable r is next:\n"
@@ -261,12 +262,12 @@ State parse_name(str input, int pos) {
     push(state);
     state = parse_namechar(input, state.pos);
     if (state.valid) {
-        str c = state.val;
+        remember("c", state.val);
     }
     if (state.valid) {
         state = parse_name(input, state.pos);
         if (state.valid) {
-            str n = state.val;
+            remember("n", state.val);
         }
         if (state.valid) {
             if (state.valid) {
@@ -377,7 +378,7 @@ State parse_nonterminal(str input, int pos) {
     // Not sure where this body is coming from
     state = parse_name(input, state.pos);
     if (state.valid) {
-        str n = state.val;
+        remember("n", state.val);
     }
     if (state.valid) {
         state = parse__(input, state.pos);
@@ -398,7 +399,7 @@ State parse_labeled(str input, int pos) {
     // Not sure where this body is coming from
     state = parse_name(input, state.pos);
     if (state.valid) {
-        str label = state.val;
+        remember("label", state.val);
     }
     if (state.valid) {
         state = parse__(input, state.pos);
@@ -409,13 +410,14 @@ State parse_labeled(str input, int pos) {
                 if (state.valid) {
                     state = parse_term(input, state.pos);
                     if (state.valid) {
-                        str value = state.val;
+                        remember("value", state.val);
                     }
                     if (state.valid) {
                         if (state.valid) {
-                            state.val = (format2("%s if (state.valid) { str %s "
-                                                 "= state.val; } \n",
-                                                 value, label))
+                            state.val =
+                                (format2("%s if (state.valid) { "
+                                         "remember(\"%s\", state.val); } \n",
+                                         value, label))
                         };
                     }
                 }
@@ -433,12 +435,12 @@ State parse_sequence(str input, int pos) {
     push(state);
     state = parse_term(input, state.pos);
     if (state.valid) {
-        str foo = state.val;
+        remember("foo", state.val);
     }
     if (state.valid) {
         state = parse_sequence(input, state.pos);
         if (state.valid) {
-            str bar = state.val;
+            remember("bar", state.val);
         }
         if (state.valid) {
             if (state.valid) {
@@ -477,7 +479,7 @@ State parse_string(str input, int pos) {
     if (state.valid) {
         state = parse_stringcontents(input, state.pos);
         if (state.valid) {
-            str s = state.val;
+            remember("s", state.val);
         }
         if (state.valid) {
             state = literal(input, state.pos, "\'");
@@ -523,12 +525,12 @@ State parse_stringcontents(str input, int pos) {
         if (state.valid) {
             state = parse_char(input, state.pos);
             if (state.valid) {
-                str c = state.val;
+                remember("c", state.val);
             }
             if (state.valid) {
                 state = parse_stringcontents(input, state.pos);
                 if (state.valid) {
-                    str s = state.val;
+                    remember("s", state.val);
                 }
                 if (state.valid) {
                     if (state.valid) {
@@ -544,17 +546,17 @@ State parse_stringcontents(str input, int pos) {
         push(state);
         state = literal(input, state.pos, "\\");
         if (state.valid) {
-            str b = state.val;
+            remember("b", state.val);
         }
         if (state.valid) {
             state = parse_char(input, state.pos);
             if (state.valid) {
-                str c = state.val;
+                remember("c", state.val);
             }
             if (state.valid) {
                 state = parse_stringcontents(input, state.pos);
                 if (state.valid) {
-                    str s = state.val;
+                    remember("s", state.val);
                 }
                 if (state.valid) {
                     if (state.valid) {
@@ -586,7 +588,7 @@ State parse_choice(str input, int pos) {
     push(state);
     state = parse_sequence(input, state.pos);
     if (state.valid) {
-        str a = state.val;
+        remember("a", state.val);
     }
     if (state.valid) {
         state = literal(input, state.pos, "/");
@@ -595,7 +597,7 @@ State parse_choice(str input, int pos) {
             if (state.valid) {
                 state = parse_choice(input, state.pos);
                 if (state.valid) {
-                    str b = state.val;
+                    remember("b", state.val);
                 }
                 if (state.valid) {
                     if (state.valid) { state.val = (format2("  push(state);
@@ -632,7 +634,7 @@ State parse_choice(str input, int pos) {
             if (state.valid) {
                 state = parse_term(input, state.pos);
                 if (state.valid) {
-                    str t = state.val;
+                    remember("t", state.val);
                 }
                 if (state.valid) {
                     if (state.valid) { state.val = (format1("push(state);
@@ -659,7 +661,7 @@ State parse_choice(str input, int pos) {
                 if (state.valid) {
                     state = parse_expr(input, state.pos);
                     if (state.valid) {
-                        str result = state.val;
+                        remember("result", state.val);
                     }
                     if (state.valid) {
                         state = parse__(input, state.pos);
@@ -687,7 +689,7 @@ State parse_choice(str input, int pos) {
                 if (state.valid) {
                     state = parse_exprcontents(input, state.pos);
                     if (state.valid) {
-                        str e = state.val;
+                        remember("e", state.val);
                     }
                     if (state.valid) {
                         state = literal(input, state.pos, ")");
@@ -745,12 +747,12 @@ State parse_choice(str input, int pos) {
                 pop();
             }
             if (state.valid) {
-                str c = state.val;
+                remember("c", state.val);
             }
             if (state.valid) {
                 state = parse_exprcontents(input, state.pos);
                 if (state.valid) {
-                    str e = state.val;
+                    remember("e", state.val);
                 }
                 if (state.valid) {
                     if (state.valid) {
@@ -782,7 +784,7 @@ State parse_choice(str input, int pos) {
                 if (state.valid) {
                     state = parse_choice(input, state.pos);
                     if (state.valid) {
-                        str body = state.val;
+                        remember("body", state.val);
                     }
                     if (state.valid) {
                         state = literal(input, state.pos, ")");
