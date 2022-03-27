@@ -16,17 +16,18 @@ sentence <- _ r: rule g: sentence -> (`${r}\n${g}`)
                 // This is from a template in c.peg, just finished with variable r
                 State parse_char(str input, int pos) {
                   if (pos >= len(input)) return null();
-                  return (State){ .pos=pos+1, .val=input[pos], valid=true };
+                  return (State){ .pos=pos+1, .val=copy(&input[pos], 1), .valid=true };
                 }
                 State literal(str input, int pos, str string) {
-                  if (strncmp(&input[pos], string, len(string) == 0)) {
-                    return { .pos=pos+len(string), .val=string, .valid=true };
+                  if (strncmp(&input[pos], string, len(string)) == 0) {
+                    return (State){ .pos=pos+len(string), .val=string, .valid=true };
                   } else return null();
                 }
-                
-                str = read(argv[1]);
-                State out = parse_sentence(src, 0);                
-                printf("%s\\n", out.val);
+		int main(int argc, char ** argv) {
+                  str src = read(argv[1]);
+                  State out = parse_sentence(src, 0);                
+                  printf("%s\\n", out.val);
+		}
                 `
             ).
 meta     <- '!' / '\'' / '<-' / '/' / '.' / '(' / ')' / ':' / '->'.

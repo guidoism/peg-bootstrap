@@ -125,7 +125,7 @@ State parse_sentence(str input, int pos) {
             }
             if (state.valid) {
                 if (state.valid) {
-                    state.val = (format2("%s\n%s", r, g));
+                    state.val = (format("${r}\n${g}", &vars));
                 };
             }
         }
@@ -140,24 +140,31 @@ State parse_sentence(str input, int pos) {
                 remember("r", state.val);
             }
             if (state.valid) {
-                if (state.valid) { state.val = (format1("// This is from a template in d.peg, variable r is next:\n"
-               " %s\n"
-               " // This is from a template in d.peg, just finished with variable r\n"
-               " State parse_char(str input, int pos) {\n"
-               "   if (pos >= len(input)) return null();\n"
-               "   return (State){ .pos=pos+1, .val=input[pos], valid=true };\n"
-               " }\n"
-               " State literal(str input, int pos, str string) {\n"
-               "   if (strncmp(&input[pos], string, len(string) == 0)) {\n"
-               "     return { .pos=pos+len(string), .val=string, .valid=true };\n"
-               "   } else return null();\n"
-               " }\n"
-               " \n"
-               " str = read(argv[1]);\n"
-               " State out = parse_sentence(src, 0);\n"
-               " printf(\"%s\\n\", out.val);\n"
-               ", r)
-            );
+                if (state.valid) {
+                    state.val = (format(
+                        "// This is from a template in d.peg, variable r is "
+                        "next:\n"
+                        " ${r}\n"
+                        " // This is from a template in d.peg, just finished "
+                        "with variable r\n"
+                        " State parse_char(str input, int pos) {\n"
+                        "   if (pos >= len(input)) return null();\n"
+                        "   return (State){ .pos=pos+1, .val=copy(&input[pos], "
+                        "1), .valid=true };\n"
+                        " }\n"
+                        " State literal(str input, int pos, str string) {\n"
+                        "   if (strncmp(&input[pos], string, len(string)) == "
+                        "0) {\n"
+                        "     return (State){ .pos=pos+len(string), "
+                        ".val=string, .valid=true };\n"
+                        "   } else return null();\n"
+                        " }\n"
+                        " \n"
+                        "int main(int argc, char ** argv) {\n"
+                        " str src = read(argv[1]);\n"
+                        " State out = parse_sentence(src, 0);\n"
+                        " printf(\"%s\\n\", out.val);\n }",
+                        &vars));
                 };
             }
         }
@@ -277,7 +284,7 @@ State parse_name(str input, int pos) {
         }
         if (state.valid) {
             if (state.valid) {
-                state.val = (format2("%s%s", c, n));
+                state.val = (format("${c}${n}", &vars));
             };
         }
     }
@@ -394,7 +401,7 @@ State parse_nonterminal(str input, int pos) {
         if (state.valid) {
             if (state.valid) {
                 state.val =
-                    (format1(" state = parse_%s(input, state.pos);\n", n));
+                    (format(" state = parse_${n}(input, state.pos);\n", &vars));
             };
         }
     }
@@ -424,10 +431,10 @@ State parse_labeled(str input, int pos) {
                     }
                     if (state.valid) {
                         if (state.valid) {
-                            state.val =
-                                (format2("%s if (state.valid) { "
-                                         "remember(\"%s\", state.val); } \n",
-                                         value, label));
+                            state.val = (format(
+                                "${value} if (state.valid) { "
+                                "remember(\"${label}\", state.val); } \n",
+                                &vars));
                         };
                     }
                 }
@@ -455,7 +462,8 @@ State parse_sequence(str input, int pos) {
         }
         if (state.valid) {
             if (state.valid) {
-                state.val = (format2("%s if (state.valid) { %s }\n", foo, bar));
+                state.val =
+                    (format("${foo} if (state.valid) { ${bar} }\n", &vars));
             };
         }
     }
@@ -499,9 +507,9 @@ State parse_string(str input, int pos) {
                 state = parse__(input, state.pos);
                 if (state.valid) {
                     if (state.valid) {
-                        state.val = (format1(
-                            " state = literal(input, state.pos, \"%s\");\n",
-                            s));
+                        state.val = (format(
+                            " state = literal(input, state.pos, \"${s}\");\n",
+                            &vars));
                     };
                 }
             }
@@ -548,7 +556,7 @@ State parse_stringcontents(str input, int pos) {
                 }
                 if (state.valid) {
                     if (state.valid) {
-                        state.val = (format2("%s%s", c, s));
+                        state.val = (format("${c}${s}", &vars));
                     };
                 }
             }
@@ -574,7 +582,7 @@ State parse_stringcontents(str input, int pos) {
                 }
                 if (state.valid) {
                     if (state.valid) {
-                        state.val = (format3("%s%s%s", b, c, s));
+                        state.val = (format("${b}${c}${s}", &vars));
                     };
                 }
             }
@@ -615,226 +623,231 @@ State parse_choice(str input, int pos) {
                     remember("b", state.val);
                 }
                 if (state.valid) {
-                    if (state.valid) { state.val = (format2("  push(state);
-                      %s
-                      if (!state.valid) {
-                            state = pop();
-                            % s
-                      } else {
-                            pop(); }", a, b)); };
-                    }
-                }
-            }
-        }
-
-        if (!state.valid) {
-            state = pop();
-            state = parse_sequence(input, state.pos);
-            if (state.valid) {
-            }
-
-        } else {
-            pop();
-        }
-        return state;
-    }
-    // This is from a template in c.peg
-    State parse_negation(str input, int pos) {
-        State state = {.pos = pos, .valid = true};
-        Stack stack = {0};
-        Variables vars = {0};
-        // Not sure where this body is coming from
-        state = literal(input, state.pos, "!");
-        if (state.valid) {
-            state = parse__(input, state.pos);
-            if (state.valid) {
-                state = parse_term(input, state.pos);
-                if (state.valid) {
-                    remember("t", state.val);
-                }
-                if (state.valid) {
-                    if (state.valid) { state.val = (format1("push(state);
-                  %s
-                  if (state.valid) {
-                            pop();
-                            state = null();
-                  } else {
-                            state = pop(); }", t)); };
-                    }
-                }
-            }
-
-            return state;
-        }
-        // This is from a template in c.peg
-        State parse_result_expression(str input, int pos) {
-            State state = {.pos = pos, .valid = true};
-            Stack stack = {0};
-            Variables vars = {0};
-            // Not sure where this body is coming from
-            state = literal(input, state.pos, "->");
-            if (state.valid) {
-                state = parse__(input, state.pos);
-                if (state.valid) {
-                    state = parse_expr(input, state.pos);
                     if (state.valid) {
-                        remember("result", state.val);
-                    }
-                    if (state.valid) {
-                        state = parse__(input, state.pos);
-                        if (state.valid) {
-                            if (state.valid) {
-                                state.val = (format1(
-                                    "if (state.valid) { state.val = %s; }\n",
-                                    result));
-                            };
-                        }
-                    }
-                }
-            }
-
-            return state;
-        }
-        // This is from a template in c.peg
-        State parse_expr(str input, int pos) {
-            State state = {.pos = pos, .valid = true};
-            Stack stack = {0};
-            Variables vars = {0};
-            // Not sure where this body is coming from
-            state = literal(input, state.pos, "(");
-            if (state.valid) {
-                state = parse__(input, state.pos);
-                if (state.valid) {
-                    state = parse_exprcontents(input, state.pos);
-                    if (state.valid) {
-                        remember("e", state.val);
-                    }
-                    if (state.valid) {
-                        state = literal(input, state.pos, ")");
-                        if (state.valid) {
-                            if (state.valid) {
-                                state.val = (format1("(%s)", e));
-                            };
-                        }
-                    }
-                }
-            }
-
-            return state;
-        }
-        // This is from a template in c.peg
-        State parse_exprcontents(str input, int pos) {
-            State state = {.pos = pos, .valid = true};
-            Stack stack = {0};
-            Variables vars = {0};
-            // Not sure where this body is coming from
-            push(state);
-            push(state);
-            push(state);
-            state = literal(input, state.pos, "(");
-
-            if (state.valid) {
-                pop();
-                state = null();
-            } else {
-                state = pop();
-            }
-            if (state.valid) {
-                push(state);
-                state = literal(input, state.pos, ")");
-
-                if (state.valid) {
-                    pop();
-                    state = null();
-                } else {
-                    state = pop();
-                }
-                if (state.valid) {
-                    state = parse_char(input, state.pos);
-                    if (state.valid) {
-                    }
-                }
-            }
-
-            if (!state.valid) {
-                state = pop();
-                state = parse_expr(input, state.pos);
-                if (state.valid) {
-                }
-
-            } else {
-                pop();
-            }
-            if (state.valid) {
-                remember("c", state.val);
-            }
-            if (state.valid) {
-                state = parse_exprcontents(input, state.pos);
-                if (state.valid) {
-                    remember("e", state.val);
-                }
-                if (state.valid) {
-                    if (state.valid) {
-                        state.val = (format2("%s%s", c, e));
+                        state.val = (format("  push(state);\n"
+                                            "${a}\n"
+                                            "if (!state.valid) {\n"
+                                            "  state = pop();\n"
+                                            "  ${b}\n"
+                                            "} else { pop(); }",
+                                            &vars));
                     };
                 }
             }
-
-            if (!state.valid) {
-                state = pop();
-                if (state.valid) {
-                    state.val = ("");
-                };
-
-            } else {
-                pop();
-            }
-            return state;
         }
-        // This is from a template in c.peg, variable r is next:
-        // This is from a template in c.peg
-        State parse_parenthesized(str input, int pos) {
-            State state = {.pos = pos, .valid = true};
-            Stack stack = {0};
-            Variables vars = {0};
-            // Not sure where this body is coming from
-            state = literal(input, state.pos, "(");
+    }
+
+    if (!state.valid) {
+        state = pop();
+        state = parse_sequence(input, state.pos);
+        if (state.valid) {
+        }
+
+    } else {
+        pop();
+    }
+    return state;
+}
+// This is from a template in c.peg
+State parse_negation(str input, int pos) {
+    State state = {.pos = pos, .valid = true};
+    Stack stack = {0};
+    Variables vars = {0};
+    // Not sure where this body is coming from
+    state = literal(input, state.pos, "!");
+    if (state.valid) {
+        state = parse__(input, state.pos);
+        if (state.valid) {
+            state = parse_term(input, state.pos);
+            if (state.valid) {
+                remember("t", state.val);
+            }
+            if (state.valid) {
+                if (state.valid) {
+                    state.val = (format("push(state);\n"
+                                        "${t}\n"
+                                        "if (state.valid) {\n"
+                                        "  pop();\n"
+                                        "  state = null();\n"
+                                        "} else { state = pop(); }",
+                                        &vars));
+                };
+            }
+        }
+    }
+
+    return state;
+}
+// This is from a template in c.peg
+State parse_result_expression(str input, int pos) {
+    State state = {.pos = pos, .valid = true};
+    Stack stack = {0};
+    Variables vars = {0};
+    // Not sure where this body is coming from
+    state = literal(input, state.pos, "->");
+    if (state.valid) {
+        state = parse__(input, state.pos);
+        if (state.valid) {
+            state = parse_expr(input, state.pos);
+            if (state.valid) {
+                remember("result", state.val);
+            }
             if (state.valid) {
                 state = parse__(input, state.pos);
                 if (state.valid) {
-                    state = parse_choice(input, state.pos);
                     if (state.valid) {
-                        remember("body", state.val);
-                    }
+                        state.val = (format(
+                            "if (state.valid) { state.val = ${result}; }\n",
+                            &vars));
+                    };
+                }
+            }
+        }
+    }
+
+    return state;
+}
+// This is from a template in c.peg
+State parse_expr(str input, int pos) {
+    State state = {.pos = pos, .valid = true};
+    Stack stack = {0};
+    Variables vars = {0};
+    // Not sure where this body is coming from
+    state = literal(input, state.pos, "(");
+    if (state.valid) {
+        state = parse__(input, state.pos);
+        if (state.valid) {
+            state = parse_exprcontents(input, state.pos);
+            if (state.valid) {
+                remember("e", state.val);
+            }
+            if (state.valid) {
+                state = literal(input, state.pos, ")");
+                if (state.valid) {
                     if (state.valid) {
-                        state = literal(input, state.pos, ")");
+                        state.val = (format("(${e})", &vars));
+                    };
+                }
+            }
+        }
+    }
+
+    return state;
+}
+// This is from a template in c.peg
+State parse_exprcontents(str input, int pos) {
+    State state = {.pos = pos, .valid = true};
+    Stack stack = {0};
+    Variables vars = {0};
+    // Not sure where this body is coming from
+    push(state);
+    push(state);
+    push(state);
+    state = literal(input, state.pos, "(");
+
+    if (state.valid) {
+        pop();
+        state = null();
+    } else {
+        state = pop();
+    }
+    if (state.valid) {
+        push(state);
+        state = literal(input, state.pos, ")");
+
+        if (state.valid) {
+            pop();
+            state = null();
+        } else {
+            state = pop();
+        }
+        if (state.valid) {
+            state = parse_char(input, state.pos);
+            if (state.valid) {
+            }
+        }
+    }
+
+    if (!state.valid) {
+        state = pop();
+        state = parse_expr(input, state.pos);
+        if (state.valid) {
+        }
+
+    } else {
+        pop();
+    }
+    if (state.valid) {
+        remember("c", state.val);
+    }
+    if (state.valid) {
+        state = parse_exprcontents(input, state.pos);
+        if (state.valid) {
+            remember("e", state.val);
+        }
+        if (state.valid) {
+            if (state.valid) {
+                state.val = (format("${c}${e}", &vars));
+            };
+        }
+    }
+
+    if (!state.valid) {
+        state = pop();
+        if (state.valid) {
+            state.val = ("");
+        };
+
+    } else {
+        pop();
+    }
+    return state;
+}
+// This is from a template in c.peg, variable r is next:
+// This is from a template in c.peg
+State parse_parenthesized(str input, int pos) {
+    State state = {.pos = pos, .valid = true};
+    Stack stack = {0};
+    Variables vars = {0};
+    // Not sure where this body is coming from
+    state = literal(input, state.pos, "(");
+    if (state.valid) {
+        state = parse__(input, state.pos);
+        if (state.valid) {
+            state = parse_choice(input, state.pos);
+            if (state.valid) {
+                remember("body", state.val);
+            }
+            if (state.valid) {
+                state = literal(input, state.pos, ")");
+                if (state.valid) {
+                    state = parse__(input, state.pos);
+                    if (state.valid) {
                         if (state.valid) {
-                            state = parse__(input, state.pos);
-                            if (state.valid) {
-                                if (state.valid) {
-                                    state.val = (body);
-                                };
-                            }
-                        }
+                            state.val = (vars.values[0]);
+                        };
                     }
                 }
             }
+        }
+    }
 
-            return state;
-        }
-        // This is from a template in c.peg, just finished with variable r
-        State parse_char(str input, int pos) {
-            if (pos >= len(input))
-                return null();
-            return (State){.pos = pos + 1, .val = input[pos], valid = true};
-        }
-        State literal(str input, int pos, str string) {
-            if (strncmp(&input[pos], string, len(string) == 0)) {
-                return {.pos = pos + len(string), .val = string, .valid = true};
-            } else
-                return null();
-        }
-
-        str = read(argv[1]);
-        State out = parse_sentence(src, 0);
-        printf("%s\n", out.val);
+    return state;
+}
+// This is from a template in c.peg, just finished with variable r
+State parse_char(str input, int pos) {
+    if (pos >= len(input))
+        return null();
+    return (State){.pos = pos + 1, .val = copy(&input[pos], 1), .valid = true};
+}
+State literal(str input, int pos, str string) {
+    if (strncmp(&input[pos], string, len(string)) == 0) {
+        return (State){.pos = pos + len(string), .val = string, .valid = true};
+    } else
+        return null();
+}
+int main(int argc, char **argv) {
+    str src = read(argv[1]);
+    State out = parse_sentence(src, 0);
+    printf("%s\n", out.val);
+}
