@@ -5,11 +5,11 @@ rule <- n: name _ '<-'_ body: choice '.'_ ->
                "State parse_${n}(str input, int pos) {\n"
                "      State state = { .pos=pos, .valid=true };\n"
                "      Stack stack = { 0 };\n"
-	       "      Variables vars = { 0 };\n"
+               "      Variables vars = { 0 };\n"
                "      // Not sure where this body is coming from\n"
                "      ${body}\n"
                "      return state;\n"
-               "}", &vars));.
+               "}", &vars)).
 sentence <- _ r: rule g: sentence -> (format2("%s\n%s", r, g ))
           / _ r: rule -> (format1("// This is from a template in d.peg, variable r is next:\n"
                " %s\n"

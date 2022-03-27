@@ -80,7 +80,7 @@ function parse_rule(input, pos) {
                State parse_${n}(str input, int pos) {
                      State state = { .pos=pos, .valid=true };
                      Stack stack = { 0 };
-	             Variables vars = { 0 };
+		     Variables vars = { 0 };
                      // Not sure where this body is coming from
                      ${body}
                      return state;
@@ -621,7 +621,7 @@ function parse_result_expression(input, pos) {
             if (state) {
                 state = parse__(input, state.pos);
                 if (state) {
-                    if (state) state.val = (`if (state.valid) { state.val = ${result} };\n`);
+                    if (state) state.val = (`if (state.valid) { state.val = ${result}; };\n`);
                 }
             }
         }

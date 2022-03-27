@@ -5,7 +5,7 @@ rule <- n: name _ '<-'_ body: choice '.'_ ->
                State parse_${n}(str input, int pos) {
                      State state = { .pos=pos, .valid=true };
                      Stack stack = { 0 };
-	             Variables vars = { 0 };
+		     Variables vars = { 0 };
                      // Not sure where this body is coming from
                      ${body}
                      return state;
@@ -61,7 +61,7 @@ negation <- '!'_ t: term ->
                   } else { state = pop(); }`).
 
 result_expression <- '->'_ result: expr _ ->
-                         (`if (state.valid) { state.val = ${result} };\n`)
+                         (`if (state.valid) { state.val = ${result}; };\n`)
                      .
 expr         <- '('_ e: exprcontents ')' -> (`(${e})`).
 exprcontents <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
