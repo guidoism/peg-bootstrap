@@ -1,7 +1,8 @@
-#include "gb_string.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#define GB_STRING_IMPLEMENTATION
+#include "gb_string.h"
 
 typedef gbString str;
 
@@ -25,10 +26,24 @@ typedef struct Variables {
 #define push(state) stack.items[++stack.top] = state
 #define pop() stack.items[stack.top--]
 #define newstr(n) gb_make_string_length("", n)
+#define copy(s, n) gb_make_string_length(s, n)
 #define len(s) gb_string_length(s)
 #define remember(k, v) { vars.names[vars.n] = gb_make_string(k); \
   vars.values[vars.n] = gb_make_string(v); \
   vars.n += 1; }
+#define null() (State){.valid=false}
+
+str read(const char * filename) {
+  FILE* f = fopen(filename, "r");
+  str s;
+  char buf[4096];
+  while (true) {
+    int n = fread(&buf, 1, 4096, f);
+    if (n > 0) {
+      s = gb_append_string_length(s, buf, n);
+    }
+  }
+}
 
 // Replace first occurence of ${key} with value
 str replace(str src, str key, str value) {
