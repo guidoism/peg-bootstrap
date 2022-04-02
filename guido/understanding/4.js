@@ -130,9 +130,10 @@ function parse_sentence(input, pos) {
                   if (pos >= len(input)) return null();
                   return (State){ .pos=pos+1, .val=copy(&input[pos], 1), .valid=true };
                 }
-                State literal(str input, int pos, str string) {
-                  if (strncmp(&input[pos], string, len(string)) == 0) {
-                    return (State){ .pos=pos+len(string), .val=string, .valid=true };
+                State literal(str input, int pos, char* string) {
+		  str s = gb_make_string(string);
+                  if (strncmp(&input[pos], s, strlen(s)) == 0) {
+                    return (State){ .pos=pos+len(s), .val=s, .valid=true };
                   } else return null();
                 }
 		int main(int argc, char ** argv) {

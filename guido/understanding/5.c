@@ -81,7 +81,8 @@ State parse_rule(str input, int pos) {
                             if (state.valid) {
                                 if (state.valid) {
                                     state.val = (format(
-                                        "// This is from a template in d.peg\n"
+                                        "// This is from a template in d.peg "
+                                        "(1)\n"
                                         "State parse_${n}(str input, int pos) "
                                         "{\n"
                                         "      State state = { .pos=pos, "
@@ -142,8 +143,8 @@ State parse_sentence(str input, int pos) {
             if (state.valid) {
                 if (state.valid) {
                     state.val = (format(
-                        "// This is from a template in d.peg, variable r is "
-                        "next:\n"
+                        "// This is from a template in d.peg (2), variable r "
+                        "is next:\n"
                         " ${r}\n"
                         " // This is from a template in d.peg, just finished "
                         "with variable r\n"
@@ -159,7 +160,13 @@ State parse_sentence(str input, int pos) {
                         ".val=string, .valid=true };\n"
                         "   } else return null();\n"
                         " }\n"
-                        " \n"
+                        " State literal(str input, int pos, char* string) {\n"
+                        "   str s = gb_make_string(string);\n"
+                        "   if (strncmp(&input[pos], s, strlen(s)) == 0) {\n"
+                        "     return (State){ .pos=pos+len(s), .val=s, "
+                        ".valid=true };\n"
+                        "   } else return null();\n"
+                        " }\n"
                         "int main(int argc, char ** argv) {\n"
                         " str src = read(argv[1]);\n"
                         " State out = parse_sentence(src, 0);\n"
@@ -840,14 +847,24 @@ State parse_char(str input, int pos) {
         return null();
     return (State){.pos = pos + 1, .val = copy(&input[pos], 1), .valid = true};
 }
-State literal(str input, int pos, str string) {
-    if (strncmp(&input[pos], string, len(string)) == 0) {
-        return (State){.pos = pos + len(string), .val = string, .valid = true};
+State literal(str input, int pos, char *string) {
+    str s = gb_make_string(string);
+    if (strncmp(&input[pos], s, strlen(s)) == 0) {
+        return (State){.pos = pos + len(s), .val = s, .valid = true};
     } else
         return null();
 }
 int main(int argc, char **argv) {
-    str src = read(argv[1]);
+  /*str src = read(argv[1]);
     State out = parse_sentence(src, 0);
     printf("%s\n", out.val);
+  */
+  Variables vars = {0};
+  remember("afar", "(start variable)${b}(end variable)");
+  remember("blow", "FUCK");
+  //str s = format("foo: ${afar} bar: ${blow} goo", &vars);
+  format("foo: ${afar} bar: ${blow} goo", &vars);
+  //  5  9
+  // 15 19
+  //printf("%s\n", s);
 }

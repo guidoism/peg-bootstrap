@@ -1,7 +1,7 @@
 sp <- ' ' / '\n' / '\t' .
 _ <- sp _ / .
 rule <- n: name _ '<-'_ body: choice '.'_ ->
-               (format("// This is from a template in d.peg\n"
+               (format("// This is from a template in d.peg (1)\n"
                "State parse_${n}(str input, int pos) {\n"
                "      State state = { .pos=pos, .valid=true };\n"
                "      Stack stack = { 0 };\n"
@@ -11,7 +11,7 @@ rule <- n: name _ '<-'_ body: choice '.'_ ->
                "      return state;\n"
                "}", &vars)).
 sentence <- _ r: rule g: sentence -> (format("${r}\n${g}", &vars))
-          / _ r: rule -> (format("// This is from a template in d.peg, variable r is next:\n"
+          / _ r: rule -> (format("// This is from a template in d.peg (2), variable r is next:\n"
                " ${r}\n"
                " // This is from a template in d.peg, just finished with variable r\n"
                " State parse_char(str input, int pos) {\n"
@@ -23,7 +23,12 @@ sentence <- _ r: rule g: sentence -> (format("${r}\n${g}", &vars))
                "     return (State){ .pos=pos+len(string), .val=string, .valid=true };\n"
                "   } else return null();\n"
                " }\n"
-               " \n"
+               " State literal(str input, int pos, char* string) {\n"
+               "   str s = gb_make_string(string);\n"
+               "   if (strncmp(&input[pos], s, strlen(s)) == 0) {\n"
+               "     return (State){ .pos=pos+len(s), .val=s, .valid=true };\n"
+               "   } else return null();\n"
+               " }\n"
 	       "int main(int argc, char ** argv) {\n"
                " str src = read(argv[1]);\n"
                " State out = parse_sentence(src, 0);\n"
