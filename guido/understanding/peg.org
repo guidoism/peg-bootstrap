@@ -30,7 +30,7 @@ meta <- '!'
  / '->'  .
 name <- c: namechar n: name -> 
  / namechar  .
-namechar <- !meta !sp char.  .
+namechar <- !meta !sp char  .
 term <- labeled  
  / nonterminal  
  / string  
@@ -100,44 +100,46 @@ parenthesized <- '(' sps body: choice ')' sps -> .
 |                   | /  |                                             | -> | ('')                | . |
 | parenthesized     | <- | '(' sps body: choice ')' sps                | -> | (body)              | . |
 
-result_expr_template
+
+#+NAME: result_expr_template
+#+BEGIN_SRC js
 (`if (state) state.val = ${result};\n`)
+#+END_SRC
 
-negation_template
-                (`stack.push(state);
-                  ${t}
-                  if (state) {
-                    stack.pop();
-                    state = null;
-                  } else { state = stack.pop(); }`).
+#+NAME: negation_template
+#+BEGIN_SRC js
+(`stack.push(state);
+   ${t}
+   if (state) {
+     stack.pop();
+     state = null;
+   } else { state = stack.pop(); }`)
+#+END_SRC
 
+#+NAME: choice_template
+#+BEGIN_SRC js
+(`  stack.push(state);
+    ${a}
+    if (!state) {
+      state = stack.pop();
+      ${b}
+    } else { stack.pop(); }`)
+#+END_SRC
 
-choice_template
-                  (`  stack.push(state);
-                      ${a}
-                      if (!state) {
-                        state = stack.pop();
-                        ${b}
-                      } else { stack.pop(); }`)
-
-
-string_template
+#+NAME: string_template
+#+BEGIN_SRC js
 (`  state = literal(input, state.pos, '${s}');\n`) .
+#+END_SRC
 
-sequence_template1
+#+NAME: sequence_template1
+#+BEGIN_SRC js
 (`${foo}  if (state) { ${bar} }\n`)
+#+END_SRC
 
-nonterminal_template
+#+NAME: nonterminal_template
+#+BEGIN_SRC js
 (`  state = parse_${n}(input, state.pos);\n`)
-
-labeled_template
-(`${value} if (state) var ${label} = state.val;\n`)
-
-#+NAME: grammar_rule
-#+BEGIN_EXAMPLE
-grammar <- _ r: rule g: grammar -> (<<grammar_out_1>>)
-         / _ r: rule            -> (<<grammar_out_2>>).
-#+END_EXAMPLE
+#+END_SRC
 
 #+NAME: grammar_out_1
 #+BEGIN_SRC js
