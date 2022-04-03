@@ -1,19 +1,81 @@
 This is my first attempt at literate programming with Org Mode where
 I'm trying to create a self-compiling PEG parser.
 
-| sp      | <- | ' '                                       |    |                    |
-|         | /  | '\n'                                      |    |                    |
-|         | /  | '\t'                                      |    |                    |
-| sps     | <- | sp sps                                    |    |                    |
-|         | /  |                                           |    |                    |
-| rule    | <- | n: name sps '<-' sps body: choice '.' sps | -> | rule_template      |
-| grammar | <- | _ r: rule g: grammar                      | -> | grammar_template_1 |
-|         | /  | _ r: rule                                 | -> | grammar_template_2 |
-|         |    |                                           |    |                    |
+| sp                | <- | ' '                                         |    |                      |
+|                   | /  | '\n'                                        |    |                      |
+|                   | /  | '\t'                                        |    |                      |
+| sps               | <- | sp sps                                      |    |                      |
+|                   | /  |                                             |    |                      |
+| rule              | <- | n: name sps '<-' sps body: choice '.' sps   | -> | rule_template        |
+| grammar           | <- | sps r: rule g: grammar                      | -> | grammar_template_1   |
+|                   | /  | sps r: rule                                 | -> | grammar_template_2   |
+| meta              | <- | '!'                                         |    |                      |
+|                   | /  | '\''                                        |    |                      |
+|                   | /  | '<-'                                        |    |                      |
+|                   | /  | '/'                                         |    |                      |
+|                   | /  | '.'                                         |    |                      |
+|                   | /  | '('                                         |    |                      |
+|                   | /  | ')'                                         |    |                      |
+|                   | /  | ':'                                         |    |                      |
+|                   | /  | '->'                                        |    |                      |
+| name              | <- | c: namechar n: name                         | -> | (c + n)              |
+|                   | /  | namechar                                    |    |                      |
+| namechar          | <- | !meta !sp char.                             |    |                      |
+| term              | <- | labeled                                     |    |                      |
+|                   | /  | nonterminal                                 |    |                      |
+|                   | /  | string                                      |    |                      |
+|                   | /  | negation                                    |    |                      |
+|                   | /  | parenthesized                               |    |                      |
+| nonterminal       | <- | n: name sps                                 | -> | nonterminal_template |
+| labeled           | <- | label: name sps ':' sps value: term         | -> | labeled_template     |
+| sequence          | <- | foo: term  bar: sequence                    | -> | sequence_template1   |
+|                   | /  | result_expression                           |    |                      |
+|                   | /  |                                             | -> | ('')                 |
+| string            | <- | '\'' s: stringcontents '\'' sps             | -> | string_template      |
+| stringcontents    | <- | !'\\' !'\'' c: char s: stringcontents       | -> | (c + s)              |
+|                   | /  | b: '\\' c: char s: stringcontents           | -> | (b + c + s)          |
+|                   | /  |                                             | -> | ('')                 |
+| choice            | <- | a: sequence '/' sps  b: choice              | -> | choice_template      |
+|                   | /  | sequence                                    |    |                      |
+| negation          | <- | '!' sps t: term                             | -> | negation_template    |
+| result_expression | <- | '->' sps result: expr sps                   | -> | result_expr_template |
+| expr              | <- | '('_ e: exprcontents ')'                    | -> | (`(${e})`)           |
+| exprcontents      | <- | c: (!'(' !')' char / expr)  e: exprcontents | -> | (c + e)              |
+|                   | /  |                                             | -> | ('')                 |
+| parenthesized     | <- | '(' sps body: choice ')' sps                | -> | (body).              |
+
+result_expr_template
+(`if (state) state.val = ${result};\n`)
+
+negation_template
+                (`stack.push(state);
+                  ${t}
+                  if (state) {
+                    stack.pop();
+                    state = null;
+                  } else { state = stack.pop(); }`).
 
 
+choice_template
+                  (`  stack.push(state);
+                      ${a}
+                      if (!state) {
+                        state = stack.pop();
+                        ${b}
+                      } else { stack.pop(); }`)
 
 
+string_template
+(`  state = literal(input, state.pos, '${s}');\n`) .
+
+sequence_template1
+(`${foo}  if (state) { ${bar} }\n`)
+
+nonterminal_template
+(`  state = parse_${n}(input, state.pos);\n`)
+
+labeled_template
+(`${value} if (state) var ${label} = state.val;\n`)
 
 #+NAME: grammar_rule
 #+BEGIN_SRC text :noweb yes
