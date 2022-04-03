@@ -1,0 +1,59 @@
+This is my first attempt at literate programming with Org Mode where
+I'm trying to create a self-compiling PEG parser.
+
+| sp      | <- | ' '                                       |    |                    |
+|         | /  | '\n'                                      |    |                    |
+|         | /  | '\t'                                      |    |                    |
+| sps     | <- | sp sps                                    |    |                    |
+|         | /  |                                           |    |                    |
+| rule    | <- | n: name sps '<-' sps body: choice '.' sps | -> | rule_template      |
+| grammar | <- | _ r: rule g: grammar                      | -> | grammar_template_1 |
+|         | /  | _ r: rule                                 | -> | grammar_template_2 |
+|         |    |                                           |    |                    |
+
+
+
+
+
+#+NAME: grammar_rule
+#+BEGIN_SRC text :noweb yes
+grammar <- _ r: rule g: grammar -> (<<grammar_out_1>>)
+         / _ r: rule            -> (<<grammar_out_2>>).
+#+END_SRC
+
+#+NAME: grammar_out_1
+#+BEGIN_SRC js
+`${r}\n${g}`
+#+END_SRC
+
+#+NAME: grammar_out_2
+#+BEGIN_SRC js
+`// This is from a template in peg.org:
+ ${r}
+ function parse_char(input, pos) {
+   if (pos >= input.length) return null;
+   return { pos: pos + 1, val: input.charAt(pos) };
+ }
+ function literal(input, pos, string) {
+   if (input.substr(pos, string.length) === string) {
+     return { pos: pos + string.length, val: string };
+   } else return null;
+ }
+ var fs = require(\'fs\');
+ var grammarfile = process.argv.slice(2)[0];
+ fs.readFile(grammarfile, function(err, data) {
+     if (err) {
+         throw err; 
+     }
+     var out = parse_grammar(data.toString(), 0);
+     console.log(out.val);
+ });`
+#+END_SRC
+
+#+NAME: guido
+#+BEGIN_SRC python :var g=grammar_rule
+return f"Grammar: {g}"
+#+END_SRC
+
+#+RESULTS: guido
+: Grammar: grammar <- _ r: rule g: grammar -> (<<grammar_out_1>>) / _ r: rule -> (<<grammar_out_2>>).
