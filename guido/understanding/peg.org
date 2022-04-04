@@ -244,17 +244,20 @@ probably pretty fragile so we should consider something better.
 
 
 * Action Templates
-  
+
+  labeled_template:
 #+NAME: labeled_template
 #+BEGIN_SRC js
 (`${value} if (state) var ${label} = state.val;\n`)
 #+END_SRC
 
+result_expr_template:
 #+NAME: result_expr_template
 #+BEGIN_SRC js
 (`if (state) state.val = ${result};\n`)
 #+END_SRC
 
+negation_template:
 #+NAME: negation_template
 #+BEGIN_SRC js
 (`stack.push(state);
@@ -265,61 +268,73 @@ probably pretty fragile so we should consider something better.
    } else { state = stack.pop(); }`)
 #+END_SRC
 
+choice_template:
 #+NAME: choice_template
 #+BEGIN_SRC js
 (`  stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
 #+END_SRC
 
+string_template:
 #+NAME: string_template
 #+BEGIN_SRC js
 (`  state = literal(input, state.pos, '${s}');\n`)
 #+END_SRC
 
+sequence_template1:
 #+NAME: sequence_template1
 #+BEGIN_SRC js
 (`${foo}  if (state) { ${bar} }\n`)
 #+END_SRC
 
+sequence_template2:
 #+NAME: sequence_template2
 #+BEGIN_SRC js
 ('')
 #+END_SRC
 
+stringcontents_template1:
 #+NAME: stringcontents_template1
 #+BEGIN_SRC js
 (c + s)
 #+END_SRC
 
+stringcontents_template2:
 #+NAME: stringcontents_template2
 #+BEGIN_SRC js
 (b + c + s)
 #+END_SRC
 
+stringcontents_template3:
 #+NAME: stringcontents_template3
 #+BEGIN_SRC js
 ('')
 #+END_SRC
 
+expr_template:
 #+NAME: expr_template
 #+BEGIN_SRC js
 (`(${e})`)
 #+END_SRC
 
+exprcontents_template1:
 #+NAME: exprcontents_template1
 #+BEGIN_SRC js
 (c + e)
 #+END_SRC
 
+exprcontents_template2:
 #+NAME: exprcontents_template2
 #+BEGIN_SRC js
 ('')
 #+END_SRC
 
+nonterminal_template:
 #+NAME: nonterminal_template
 #+BEGIN_SRC js
 (`  state = parse_${n}(input, state.pos);\n`)
 #+END_SRC
 
+rule_template:
 #+NAME: rule_template
 #+BEGIN_SRC js
 (`// This is from a template in b.peg
@@ -332,11 +347,13 @@ function parse_${n}(input, pos) {
 }`)
 #+END_SRC
 
+grammar_template1:
 #+NAME: grammar_template1
 #+BEGIN_SRC js
 (`${r}\n${g}`)
 #+END_SRC
 
+grammar_template2:
 #+NAME: grammar_template2
 #+BEGIN_SRC js
 (`// This is from a template in peg.org:
@@ -361,6 +378,7 @@ function parse_${n}(input, pos) {
  });`)
 #+END_SRC
 
+name_template:
 #+NAME: name_template
 #+BEGIN_SRC js
 (c + n)
