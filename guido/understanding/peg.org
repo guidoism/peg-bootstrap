@@ -245,7 +245,7 @@ probably pretty fragile so we should consider something better.
 
 * Action Templates
 
-  labeled_template:
+labeled_template:
 #+NAME: labeled_template
 #+BEGIN_SRC js
 (`${value} if (state) var ${label} = state.val;\n`)
@@ -260,7 +260,7 @@ result_expr_template:
 negation_template:
 #+NAME: negation_template
 #+BEGIN_SRC js
-(`stack.push(state);
+(` stack.push(state);
    ${t}
    if (state) {
      stack.pop();
@@ -271,13 +271,13 @@ negation_template:
 choice_template:
 #+NAME: choice_template
 #+BEGIN_SRC js
-(`  stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
+(`stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
 #+END_SRC
 
 string_template:
 #+NAME: string_template
 #+BEGIN_SRC js
-(`  state = literal(input, state.pos, '${s}');\n`)
+(`state = literal(input, state.pos, '${s}');\n`)
 #+END_SRC
 
 sequence_template1:
@@ -331,7 +331,7 @@ exprcontents_template2:
 nonterminal_template:
 #+NAME: nonterminal_template
 #+BEGIN_SRC js
-(`  state = parse_${n}(input, state.pos);\n`)
+(`state = parse_${n}(input, state.pos);\n`)
 #+END_SRC
 
 rule_template:
