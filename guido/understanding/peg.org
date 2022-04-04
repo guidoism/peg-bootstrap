@@ -61,6 +61,7 @@ I'm trying to create a self-compiling PEG parser.
 	  action = blocks.get(action) or 'NOT FOUND'
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
+  output = output.replace('sps', '_')
   open('output.txt', 'w').write(output)
   return output
 #+END_SRC
@@ -70,9 +71,9 @@ I'm trying to create a self-compiling PEG parser.
 sp                <- ' '   
                   / '\n'   
                   / '\t'   .
-sps               <- sp sps   
+_               <- sp _   
                   /    .
-rule              <- n: name sps '<-' sps body: choice '.' sps -> (`// This is from a template in b.peg
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (`// This is from a template in b.peg
 function parse_${n}(input, pos) {
       var state = { pos: pos };
       var stack = [];
@@ -81,9 +82,9 @@ function parse_${n}(input, pos) {
       return state;
 }`)
  .
-grammar           <- sps r: rule g: grammar -> (`${r}\n${g}`)
+grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
  
-                  / sps r: rule -> (`// This is from a template in peg.org:
+                  / _ r: rule -> (`// This is from a template in peg.org:
  ${r}
  function parse_char(input, pos) {
    if (pos >= input.length) return null;
@@ -122,16 +123,16 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name sps -> (`  state = parse_${n}(input, state.pos);\n`)
+nonterminal       <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name sps ':' sps value: term -> (`${value} if (state) var ${label} = state.val;\n`)
+labeled           <- label: name _ ':' _ value: term -> (`${value} if (state) var ${label} = state.val;\n`)
  .
 sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }\n`)
  
                   / result_expression   
                   /  -> ('')
  .
-string            <- '\'' s: stringcontents '\'' sps -> (`  state = literal(input, state.pos, '${s}');\n`)
+string            <- '\'' s: stringcontents '\'' _ -> (`  state = literal(input, state.pos, '${s}');\n`)
  .
 stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
@@ -139,25 +140,25 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   /  -> ('')
  .
-choice            <- a: sequence '/' sps  b: choice -> (`  stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
+choice            <- a: sequence '/' _  b: choice -> (`  stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
  
                   / sequence   .
-negation          <- '!' sps t: term -> (`stack.push(state);
+negation          <- '!' _ t: term -> (`stack.push(state);
    ${t}
    if (state) {
      stack.pop();
      state = null;
    } else { state = stack.pop(); }`)
  .
-result_expression <- '->' sps result: expr sps -> (`if (state) state.val = ${result};\n`)
+result_expression <- '->' _ result: expr _ -> (`if (state) state.val = ${result};\n`)
  .
-expr              <- '(' sps e: exprcontents ')' -> (`(${e})`)
+expr              <- '(' _ e: exprcontents ')' -> (`(${e})`)
  .
 exprcontents      <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
  
                   /  -> ('')
  .
-parenthesized     <- '(' sps body: choice ')' sps -> (body) .
+parenthesized     <- '(' _ body: choice ')' _ -> (body) .
 #+end_example
 
 
