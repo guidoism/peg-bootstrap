@@ -16,4 +16,9 @@ literate:
 	node 0.js literate.a.peg | sed -e 's/parse_sentence/parse_grammar/g' | js-beautify --end-with-newline --brace-style=end-expand - > literate.1.js
 	node literate.1.js literate.a.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.2.js
 	node literate.2.js literate.a.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.3.js
-	diff literate.2.js literate.3.js
+	#diff literate.2.js literate.3.js
+	node literate.3.js literate.b.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.4.js
+	#diff literate.3.js literate.4.js
+	node literate.4.js literate.b.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.5.js
+	node literate.4.js literate.b.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.6.js
+	diff literate.5.js literate.6.js

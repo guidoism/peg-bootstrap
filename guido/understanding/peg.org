@@ -63,6 +63,17 @@ I'm trying to create a self-compiling PEG parser.
   output = '\n'.join(out)
   output = output.replace('sps', '_')
   open('literate.a.peg', 'w').write(output)
+
+  out = []
+  for (name, larrow, body, rarrow, action, end) in rules:
+      if action and action[0] != '(':
+	  b_action = f'B.{action}'
+	  action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
+      out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
+  output = '\n'.join(out)
+  output = output.replace('sps', '_')
+  open('literate.b.peg', 'w').write(output)
+
   return output
 #+END_SRC
 
@@ -129,7 +140,7 @@ term              <- labeled
                   / parenthesized   .
 nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name _ ':' _ value: term -> (`${value} if (state) { var ${label} = state.val; }\n`)
+labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) var ', label, ' = state.val;\n']))
  .
 sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }\n`)
  
