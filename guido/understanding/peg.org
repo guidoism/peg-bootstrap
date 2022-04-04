@@ -6,8 +6,6 @@ I'm trying to create a self-compiling PEG parser.
 #+NAME: pegfile
 #+BEGIN_SRC python :var rules=rules
   import re
-  #ORDER = ["sp", "sps", "rule", "grammar", "meta", "name", "namechar", "term", "nonterminal", "labeled", "sequence", "string", "stringcontents", "choice", "negation", "result_expression", "expr", "exprcontents", "parenthesized"]
-
   this = open(filename).read()
   m = dict(re.findall(r'#\+NAME:\s*(\S+)\s+#\+BEGIN_SRC js\s+(.+?)#\+END_SRC', this, re.MULTILINE|re.DOTALL))
   open('/tmp/poop.txt', 'w').write(str(m))
