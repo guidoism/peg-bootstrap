@@ -123,7 +123,7 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (`  state = parse_${n}(input, state.pos);\n`)
+nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
 labeled           <- label: name _ ':' _ value: term -> (`${value} if (state) var ${label} = state.val;\n`)
  .
@@ -132,7 +132,7 @@ sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }
                   / result_expression   
                   /  -> ('')
  .
-string            <- '\'' s: stringcontents '\'' _ -> (`  state = literal(input, state.pos, '${s}');\n`)
+string            <- '\'' s: stringcontents '\'' _ -> (`state = literal(input, state.pos, '${s}');\n`)
  .
 stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
@@ -140,10 +140,10 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   /  -> ('')
  .
-choice            <- a: sequence '/' _  b: choice -> (`  stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
+choice            <- a: sequence '/' _  b: choice -> (`stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
  
                   / sequence   .
-negation          <- '!' _ t: term -> (`stack.push(state);
+negation          <- '!' _ t: term -> (` stack.push(state);
    ${t}
    if (state) {
      stack.pop();
