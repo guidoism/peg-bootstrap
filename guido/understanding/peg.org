@@ -85,25 +85,29 @@ function parse_${n}(input, pos) {
 grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
  
                   / _ r: rule -> (`// This is from a template in peg.org:
- ${r}
- function parse_char(input, pos) {
-   if (pos >= input.length) return null;
-   return { pos: pos + 1, val: input.charAt(pos) };
- }
- function literal(input, pos, string) {
-   if (input.substr(pos, string.length) === string) {
-     return { pos: pos + string.length, val: string };
-   } else return null;
- }
- var fs = require(\'fs\');
- var grammarfile = process.argv.slice(2)[0];
- fs.readFile(grammarfile, function(err, data) {
-     if (err) {
-         throw err; 
-     }
-     var out = parse_grammar(data.toString(), 0);
-     console.log(out.val);
- });`)
+   function format(parts) {
+       return parts.join('');
+   }
+   ${r}
+   function parse_char(input, pos) {
+     if (pos >= input.length) return null;
+     return { pos: pos + 1, val: input.charAt(pos) };
+   }
+   function literal(input, pos, string) {
+     if (input.substr(pos, string.length) === string) {
+       return { pos: pos + string.length, val: string };
+     } else return null;
+   }
+   //let format = (parts) => parts.join('')
+   var fs = require(\'fs\');
+   var grammarfile = process.argv.slice(2)[0];
+   fs.readFile(grammarfile, function(err, data) {
+       if (err) {
+	   throw err; 
+       }
+       var out = parse_grammar(data.toString(), 0);
+       console.log(out.val);
+   });`)
  .
 meta              <- '!'   
                   / '\''   
@@ -125,7 +129,7 @@ term              <- labeled
                   / parenthesized   .
 nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name _ ':' _ value: term -> (`${value} if (state) var ${label} = state.val;\n`)
+labeled           <- label: name _ ':' _ value: term -> (`${value} if (state) { var ${label} = state.val; }\n`)
  .
 sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }\n`)
  
@@ -248,7 +252,15 @@ probably pretty fragile so we should consider something better.
 labeled_template:
 #+NAME: labeled_template
 #+BEGIN_SRC js
-(`${value} if (state) var ${label} = state.val;\n`)
+(`${value} if (state) { var ${label} = state.val; }\n`)
+#+END_SRC
+
+The `B`-series templates are made to do string interpolation in a way
+closer to other languages and easier to port to C and assembly.
+
+#+NAME: B.labeled_template
+#+BEGIN_SRC js
+(format([value, ' if (state) var ', label, ' = state.val;\n']))
 #+END_SRC
 
 result_expr_template:
@@ -356,26 +368,30 @@ grammar_template1:
 grammar_template2:
 #+NAME: grammar_template2
 #+BEGIN_SRC js
-(`// This is from a template in peg.org:
- ${r}
- function parse_char(input, pos) {
-   if (pos >= input.length) return null;
-   return { pos: pos + 1, val: input.charAt(pos) };
- }
- function literal(input, pos, string) {
-   if (input.substr(pos, string.length) === string) {
-     return { pos: pos + string.length, val: string };
-   } else return null;
- }
- var fs = require(\'fs\');
- var grammarfile = process.argv.slice(2)[0];
- fs.readFile(grammarfile, function(err, data) {
-     if (err) {
-         throw err; 
-     }
-     var out = parse_grammar(data.toString(), 0);
-     console.log(out.val);
- });`)
+  (`// This is from a template in peg.org:
+   function format(parts) {
+       return parts.join('');
+   }
+   ${r}
+   function parse_char(input, pos) {
+     if (pos >= input.length) return null;
+     return { pos: pos + 1, val: input.charAt(pos) };
+   }
+   function literal(input, pos, string) {
+     if (input.substr(pos, string.length) === string) {
+       return { pos: pos + string.length, val: string };
+     } else return null;
+   }
+   //let format = (parts) => parts.join('')
+   var fs = require(\'fs\');
+   var grammarfile = process.argv.slice(2)[0];
+   fs.readFile(grammarfile, function(err, data) {
+       if (err) {
+	   throw err; 
+       }
+       var out = parse_grammar(data.toString(), 0);
+       console.log(out.val);
+   });`)
 #+END_SRC
 
 name_template:
@@ -383,5 +399,7 @@ name_template:
 #+BEGIN_SRC js
 (c + n)
 #+END_SRC
+
+
 
 
