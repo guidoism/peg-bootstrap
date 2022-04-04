@@ -4,17 +4,13 @@ I'm trying to create a self-compiling PEG parser.
 #+PROPERTY: header-args:python :var filename=(buffer-file-name)
 
 #+NAME: pegfile
-#+BEGIN_SRC python :var rules=rules
-  import re
-  this = open(filename).read()
-  m = dict(re.findall(r'#\+NAME:\s*(\S+)\s+#\+BEGIN_SRC js\s+(.+?)#\+END_SRC', this, re.MULTILINE|re.DOTALL))
-  open('/tmp/poop.txt', 'w').write(str(m))
-
+#+BEGIN_SRC python :var rules=rules :noweb yes
+  <<js_src_blocks>>
   name_size = max(len(r[0]) for r in rules)
   out = []
   for (name, larrow, body, rarrow, action, end) in rules:
       if action and action[0] != '(':
-	  action = m.get(action) or 'NOT FOUND'
+	  action = blocks.get(action) or 'NOT FOUND'
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
   open('output.txt', 'w').write(output)
@@ -315,3 +311,15 @@ function parse_${n}(input, pos) {
  });`)
 #+END_SRC
 
+We need a way to get the templates that have been broken out into
+source blocks in this document. There's probably a better way, but the
+easiest thing I could figure out was to read the current file into
+memory and use regexes to get at each of the source blocks. This is
+probably pretty fragile so we should consider something better.
+
+#+NAME: js_src_blocks
+#+BEGIN_SRC python
+  import re
+  this = open(filename).read()
+  blocks = dict(re.findall(r'#\+NAME:\s*(\S+)\s+#\+BEGIN_SRC js\s+(.+?)#\+END_SRC', this, re.MULTILINE|re.DOTALL))
+#+END_SRC
