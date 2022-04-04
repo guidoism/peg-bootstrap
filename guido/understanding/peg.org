@@ -62,7 +62,7 @@ I'm trying to create a self-compiling PEG parser.
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
   output = output.replace('sps', '_')
-  open('output.txt', 'w').write(output)
+  open('literate.a.peg', 'w').write(output)
   return output
 #+END_SRC
 
