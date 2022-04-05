@@ -84,23 +84,13 @@ sp                <- ' '
                   / '\t'   .
 _               <- sp _   
                   /    .
-rule              <- n: name _ '<-' _ body: choice '.' _ -> (`// This is from a template in b.peg
-function parse_${n}(input, pos) {
-      var state = { pos: pos };
-      var stack = [];
-      // Not sure where this body is coming from
-      ${body}
-      return state;
-}`)
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
+         body, ' return state; }']))
  .
-grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
+grammar           <- _ r: rule g: grammar -> (format([r, '\n', g]))
  
-                  / _ r: rule -> (`// This is from a template in peg.org:
-   function format(parts) {
-       return parts.join('');
-   }
-   ${r}
-   function parse_char(input, pos) {
+                  / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
+   `function parse_char(input, pos) {
      if (pos >= input.length) return null;
      return { pos: pos + 1, val: input.charAt(pos) };
    }
@@ -109,7 +99,7 @@ grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
        return { pos: pos + string.length, val: string };
      } else return null;
    }
-   //let format = (parts) => parts.join('')
+   let format = (parts) => parts.join('')
    var fs = require(\'fs\');
    var grammarfile = process.argv.slice(2)[0];
    fs.readFile(grammarfile, function(err, data) {
@@ -138,16 +128,16 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
+nonterminal       <- n: name _ -> (format(['state = parse_', n, '(input, state.pos);\n']))
  .
 labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) var ', label, ' = state.val;\n']))
  .
-sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }\n`)
+sequence          <- foo: term  bar: sequence -> (format([foo, ' if (state) { ', bar, ' }\n']))
  
                   / result_expression   
                   /  -> ('')
  .
-string            <- '\'' s: stringcontents '\'' _ -> (`state = literal(input, state.pos, '${s}');\n`)
+string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \'', s, '\');\n']))
  .
 stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
@@ -155,19 +145,15 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   /  -> ('')
  .
-choice            <- a: sequence '/' _  b: choice -> (`stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
+choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ', a, ' if (!state) {state = stack.pop(); ', b, '} else { stack.pop(); }']))
  
                   / sequence   .
-negation          <- '!' _ t: term -> (` stack.push(state);
-   ${t}
-   if (state) {
-     stack.pop();
-     state = null;
-   } else { state = stack.pop(); }`)
+negation          <- '!' _ t: term -> (format([' stack.push(state);', t, 
+   'if (state) { stack.pop(); state = null; } else { state = stack.pop(); }']))
  .
-result_expression <- '->' _ result: expr _ -> (`if (state) state.val = ${result};\n`)
+result_expression <- '->' _ result: expr _ -> (format(['if (state) state.val = ', result, ';\n']))
  .
-expr              <- '(' _ e: exprcontents ')' -> (`(${e})`)
+expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
  .
 exprcontents      <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
  
@@ -280,6 +266,11 @@ result_expr_template:
 (`if (state) state.val = ${result};\n`)
 #+END_SRC
 
+#+NAME: B.result_expr_template
+#+BEGIN_SRC js
+(format(['if (state) state.val = ', result, ';\n']))
+#+END_SRC
+
 negation_template:
 #+NAME: negation_template
 #+BEGIN_SRC js
@@ -291,10 +282,21 @@ negation_template:
    } else { state = stack.pop(); }`)
 #+END_SRC
 
+#+NAME: B.negation_template
+#+BEGIN_SRC js
+(format([' stack.push(state);', t, 
+   'if (state) { stack.pop(); state = null; } else { state = stack.pop(); }']))
+#+END_SRC
+
 choice_template:
 #+NAME: choice_template
 #+BEGIN_SRC js
 (`stack.push(state); ${a} if (!state) {state = stack.pop(); ${b}} else { stack.pop(); }`)
+#+END_SRC
+
+#+NAME: B.choice_template
+#+BEGIN_SRC js
+(format(['stack.push(state); ', a, ' if (!state) {state = stack.pop(); ', b, '} else { stack.pop(); }']))
 #+END_SRC
 
 string_template:
@@ -303,10 +305,20 @@ string_template:
 (`state = literal(input, state.pos, '${s}');\n`)
 #+END_SRC
 
+#+NAME: B.string_template
+#+BEGIN_SRC js
+(format(['state = literal(input, state.pos, \'', s, '\');\n']))
+#+END_SRC
+
 sequence_template1:
 #+NAME: sequence_template1
 #+BEGIN_SRC js
 (`${foo}  if (state) { ${bar} }\n`)
+#+END_SRC
+
+#+NAME: B.sequence_template1
+#+BEGIN_SRC js
+(format([foo, ' if (state) { ', bar, ' }\n']))
 #+END_SRC
 
 sequence_template2:
@@ -336,7 +348,7 @@ stringcontents_template3:
 expr_template:
 #+NAME: expr_template
 #+BEGIN_SRC js
-(`(${e})`)
+('(' + e + ')')
 #+END_SRC
 
 exprcontents_template1:
@@ -357,6 +369,11 @@ nonterminal_template:
 (`state = parse_${n}(input, state.pos);\n`)
 #+END_SRC
 
+#+NAME: B.nonterminal_template
+#+BEGIN_SRC js
+(format(['state = parse_', n, '(input, state.pos);\n']))
+#+END_SRC
+
 rule_template:
 #+NAME: rule_template
 #+BEGIN_SRC js
@@ -370,21 +387,28 @@ function parse_${n}(input, pos) {
 }`)
 #+END_SRC
 
+#+NAME: B.rule_template
+#+BEGIN_SRC js
+(format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
+         body, ' return state; }']))
+#+END_SRC
+
 grammar_template1:
 #+NAME: grammar_template1
 #+BEGIN_SRC js
 (`${r}\n${g}`)
 #+END_SRC
 
+#+NAME: B.grammar_template1
+#+BEGIN_SRC js
+(format([r, '\n', g]))
+#+END_SRC
+
 grammar_template2:
 #+NAME: grammar_template2
 #+BEGIN_SRC js
-  (`// This is from a template in peg.org:
-   function format(parts) {
-       return parts.join('');
-   }
-   ${r}
-   function parse_char(input, pos) {
+  ('// This is from a template in peg.org:\n' + r +
+   ` function parse_char(input, pos) {
      if (pos >= input.length) return null;
      return { pos: pos + 1, val: input.charAt(pos) };
    }
@@ -393,7 +417,7 @@ grammar_template2:
        return { pos: pos + string.length, val: string };
      } else return null;
    }
-   //let format = (parts) => parts.join('')
+   let format = (parts) => parts.join('')
    var fs = require(\'fs\');
    var grammarfile = process.argv.slice(2)[0];
    fs.readFile(grammarfile, function(err, data) {
