@@ -90,7 +90,7 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function p
 grammar           <- _ r: rule g: grammar -> (format([r, '\n', g]))
  
                   / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
-   `function parse_char(input, pos) {
+   ` function parse_char(input, pos) {
      if (pos >= input.length) return null;
      return { pos: pos + 1, val: input.charAt(pos) };
    }
