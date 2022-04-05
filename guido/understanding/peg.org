@@ -87,7 +87,7 @@ _               <- sp _
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
          body, ' return state; }']))
  .
-grammar           <- _ r: rule g: grammar -> (format([r, '\n', g]))
+grammar           <- _ r: rule g: grammar -> (format([r, ' ', g]))
  
                   / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
    ` function parse_char(input, pos) {
@@ -128,16 +128,16 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (format(['state = parse_', n, '(input, state.pos);\n']))
+nonterminal       <- n: name _ -> (format(['state = parse_', n, '(input, state.pos);']))
  .
-labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) var ', label, ' = state.val;\n']))
+labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) { var ', label, ' = state.val; }']))
  .
-sequence          <- foo: term  bar: sequence -> (format([foo, ' if (state) { ', bar, ' }\n']))
+sequence          <- foo: term  bar: sequence -> (format([foo, ' if (state) { ', bar, ' } ']))
  
                   / result_expression   
                   /  -> ('')
  .
-string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \'', s, '\');\n']))
+string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \'', s, '\');']))
  .
 stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
@@ -145,13 +145,18 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   /  -> ('')
  .
-choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ', a, ' if (!state) {state = stack.pop(); ', b, '} else { stack.pop(); }']))
+choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
+	      a,
+	      ' if (!state) {state = stack.pop(); ',
+	      b,
+	      '} else { stack.pop(); }']))
  
                   / sequence   .
 negation          <- '!' _ t: term -> (format([' stack.push(state);', t, 
-   'if (state) { stack.pop(); state = null; } else { state = stack.pop(); }']))
+	   'if (state) { stack.pop(); state = null; }',
+	   'else { state = stack.pop(); }']))
  .
-result_expression <- '->' _ result: expr _ -> (format(['if (state) state.val = ', result, ';\n']))
+result_expression <- '->' _ result: expr _ -> (format(['if (state) { state.val = ', result, '; }']))
  .
 expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
  .
@@ -246,18 +251,19 @@ probably pretty fragile so we should consider something better.
 
 * Action Templates
 
+  The `B`-series templates are made to do string interpolation in a way
+  closer to other languages and easier to port to C and assembly.
+
+
 labeled_template:
 #+NAME: labeled_template
 #+BEGIN_SRC js
 (`${value} if (state) { var ${label} = state.val; }\n`)
 #+END_SRC
 
-The `B`-series templates are made to do string interpolation in a way
-closer to other languages and easier to port to C and assembly.
-
 #+NAME: B.labeled_template
 #+BEGIN_SRC js
-(format([value, ' if (state) var ', label, ' = state.val;\n']))
+(format([value, ' if (state) { var ', label, ' = state.val; }']))
 #+END_SRC
 
 result_expr_template:
@@ -268,7 +274,7 @@ result_expr_template:
 
 #+NAME: B.result_expr_template
 #+BEGIN_SRC js
-(format(['if (state) state.val = ', result, ';\n']))
+(format(['if (state) { state.val = ', result, '; }']))
 #+END_SRC
 
 negation_template:
@@ -284,8 +290,9 @@ negation_template:
 
 #+NAME: B.negation_template
 #+BEGIN_SRC js
-(format([' stack.push(state);', t, 
-   'if (state) { stack.pop(); state = null; } else { state = stack.pop(); }']))
+  (format([' stack.push(state);', t, 
+	   'if (state) { stack.pop(); state = null; }',
+	   'else { state = stack.pop(); }']))
 #+END_SRC
 
 choice_template:
@@ -296,7 +303,11 @@ choice_template:
 
 #+NAME: B.choice_template
 #+BEGIN_SRC js
-(format(['stack.push(state); ', a, ' if (!state) {state = stack.pop(); ', b, '} else { stack.pop(); }']))
+     (format(['stack.push(state); ',
+	      a,
+	      ' if (!state) {state = stack.pop(); ',
+	      b,
+	      '} else { stack.pop(); }']))
 #+END_SRC
 
 string_template:
@@ -307,7 +318,7 @@ string_template:
 
 #+NAME: B.string_template
 #+BEGIN_SRC js
-(format(['state = literal(input, state.pos, \'', s, '\');\n']))
+(format(['state = literal(input, state.pos, \'', s, '\');']))
 #+END_SRC
 
 sequence_template1:
@@ -318,7 +329,7 @@ sequence_template1:
 
 #+NAME: B.sequence_template1
 #+BEGIN_SRC js
-(format([foo, ' if (state) { ', bar, ' }\n']))
+(format([foo, ' if (state) { ', bar, ' } ']))
 #+END_SRC
 
 sequence_template2:
@@ -371,7 +382,7 @@ nonterminal_template:
 
 #+NAME: B.nonterminal_template
 #+BEGIN_SRC js
-(format(['state = parse_', n, '(input, state.pos);\n']))
+(format(['state = parse_', n, '(input, state.pos);']))
 #+END_SRC
 
 rule_template:
@@ -401,7 +412,7 @@ grammar_template1:
 
 #+NAME: B.grammar_template1
 #+BEGIN_SRC js
-(format([r, '\n', g]))
+(format([r, ' ', g]))
 #+END_SRC
 
 grammar_template2:
