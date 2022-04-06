@@ -74,6 +74,16 @@ I'm trying to create a self-compiling PEG parser.
   output = output.replace('sps', '_')
   open('literate.b.peg', 'w').write(output)
 
+  out = []
+  for (name, larrow, body, rarrow, action, end) in rules:
+      if action and action[0] != '(':
+	  b_action = f'C.{action}'
+	  action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
+      out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
+  output = '\n'.join(out)
+  output = output.replace('sps', '_')
+  open('literate.c.peg', 'w').write(output)
+
   return output
 #+END_SRC
 
@@ -84,10 +94,10 @@ sp                <- ' '
                   / '\t'   .
 _               <- sp _   
                   /    .
-rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['State parse_', n, '(str input, int pos) { State state = { .pos=pos }; Stack stack = {0}; ',
          body, ' return state; }']))
  .
-grammar           <- _ r: rule g: grammar -> (format([r, ' ', g]))
+grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
  
                   / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
    ` function parse_char(input, pos) {
@@ -128,16 +138,16 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (format(['state = parse_', n, '(input, state.pos);']))
+nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) { var ', label, ' = state.val; }']))
+labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (valid) { var(', label, 'state.val); }']))
  .
-sequence          <- foo: term  bar: sequence -> (format([foo, ' if (state) { ', bar, ' } ']))
+sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }\n`)
  
                   / result_expression   
                   /  -> ('')
  .
-string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \'', s, '\');']))
+string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \"', s, '\");']))
  .
 stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
@@ -145,18 +155,18 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   /  -> ('')
  .
-choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
+choice            <- a: sequence '/' _  b: choice -> (format(['push(state); ',
 	      a,
-	      ' if (!state) {state = stack.pop(); ',
+	      ' if (invalid) { state = pop(); ',
 	      b,
-	      '} else { stack.pop(); }']))
+	      '} else { pop(); }']))
  
                   / sequence   .
-negation          <- '!' _ t: term -> (format([' stack.push(state);', t, 
-	   'if (state) { stack.pop(); state = null; }',
-	   'else { state = stack.pop(); }']))
+negation          <- '!' _ t: term -> (format([' push(state);', t, 
+	   'if (valid) { pop(); state.null = true; }',
+	   'else { state = pop(); }']))
  .
-result_expression <- '->' _ result: expr _ -> (format(['if (state) { state.val = ', result, '; }']))
+result_expression <- '->' _ result: expr _ -> (format(['if (valid) { state.val = ', result, '; }']))
  .
 expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
  .
@@ -297,6 +307,8 @@ function parse_${n}(input, pos) {
 
 #+NAME: C.rule_template
 #+BEGIN_SRC js
+(format(['State parse_', n, '(str input, int pos) { State state = { .pos=pos }; Stack stack = {0}; ',
+         body, ' return state; }']))
 #+END_SRC
 
 labeled_template:
@@ -310,6 +322,11 @@ labeled_template:
 (format([value, ' if (state) { var ', label, ' = state.val; }']))
 #+END_SRC
 
+#+NAME: C.labeled_template
+#+BEGIN_SRC js
+(format([value, ' if (valid) { var(', label, 'state.val); }']))
+#+END_SRC
+
 result_expr_template:
 #+NAME: result_expr_template
 #+BEGIN_SRC js
@@ -319,6 +336,11 @@ result_expr_template:
 #+NAME: B.result_expr_template
 #+BEGIN_SRC js
 (format(['if (state) { state.val = ', result, '; }']))
+#+END_SRC
+
+#+NAME: C.result_expr_template
+#+BEGIN_SRC js
+(format(['if (valid) { state.val = ', result, '; }']))
 #+END_SRC
 
 negation_template:
@@ -339,6 +361,13 @@ negation_template:
 	   'else { state = stack.pop(); }']))
 #+END_SRC
 
+#+NAME: C.negation_template
+#+BEGIN_SRC js
+  (format([' push(state);', t, 
+	   'if (valid) { pop(); state.null = true; }',
+	   'else { state = pop(); }']))
+#+END_SRC
+
 choice_template:
 #+NAME: choice_template
 #+BEGIN_SRC js
@@ -354,6 +383,15 @@ choice_template:
 	      '} else { stack.pop(); }']))
 #+END_SRC
 
+#+NAME: C.choice_template
+#+BEGIN_SRC js
+     (format(['push(state); ',
+	      a,
+	      ' if (invalid) { state = pop(); ',
+	      b,
+	      '} else { pop(); }']))
+#+END_SRC
+
 string_template:
 #+NAME: string_template
 #+BEGIN_SRC js
@@ -363,6 +401,11 @@ string_template:
 #+NAME: B.string_template
 #+BEGIN_SRC js
 (format(['state = literal(input, state.pos, \'', s, '\');']))
+#+END_SRC
+
+#+NAME: C.string_template
+#+BEGIN_SRC js
+(format(['state = literal(input, state.pos, \"', s, '\");']))
 #+END_SRC
 
 sequence_template1:
