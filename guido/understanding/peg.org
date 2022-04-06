@@ -284,7 +284,6 @@ function parse_${n}(input, pos) {
 
 #+NAME: C.rule_template
 #+BEGIN_SRC js
-
 #+END_SRC
 
 labeled_template:
