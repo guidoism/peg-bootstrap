@@ -251,6 +251,19 @@ probably pretty fragile so we should consider something better.
 
 * Action Templates
 
+  The (high-level) operations our parser needs to operate are:
+
+  - Function calls (Jumping to labels)
+  - Recursion (can be implemented by hand with stacks)
+  - Stacks to save state between alternatives
+  - String templating with variable interpolation
+  - If statements
+  - Saving of named variables during a function lifetime
+  - Invalid state
+  - Matching string literals
+  - Concatenation of strings
+  - Reading/writing, input/output
+  
   Note: The `B`-series templates are made to do string interpolation in a way
   closer to other languages and easier to port to C and assembly.
 
