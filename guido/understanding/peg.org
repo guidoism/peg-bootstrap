@@ -251,9 +251,41 @@ probably pretty fragile so we should consider something better.
 
 * Action Templates
 
-  The `B`-series templates are made to do string interpolation in a way
+  Note: The `B`-series templates are made to do string interpolation in a way
   closer to other languages and easier to port to C and assembly.
 
+** rule_template
+
+   Each rule is represented and generated as a single function. These
+   function need to support recursive and mutually-recusive calls.
+
+   Upon entry, each invocation saves the current position and creates
+   a new stack for itself.
+
+   Then the generated body is run and whatever the state is at the end
+   is returned to the caller.
+   
+#+NAME: rule_template
+#+BEGIN_SRC js
+(`// This is from a template in b.peg
+function parse_${n}(input, pos) {
+      var state = { pos: pos };
+      var stack = [];
+      ${body}
+      return state;
+}`)
+#+END_SRC
+
+#+NAME: B.rule_template
+#+BEGIN_SRC js
+(format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
+         body, ' return state; }']))
+#+END_SRC
+
+#+NAME: C.rule_template
+#+BEGIN_SRC js
+
+#+END_SRC
 
 labeled_template:
 #+NAME: labeled_template
@@ -383,25 +415,6 @@ nonterminal_template:
 #+NAME: B.nonterminal_template
 #+BEGIN_SRC js
 (format(['state = parse_', n, '(input, state.pos);']))
-#+END_SRC
-
-rule_template:
-#+NAME: rule_template
-#+BEGIN_SRC js
-(`// This is from a template in b.peg
-function parse_${n}(input, pos) {
-      var state = { pos: pos };
-      var stack = [];
-      // Not sure where this body is coming from
-      ${body}
-      return state;
-}`)
-#+END_SRC
-
-#+NAME: B.rule_template
-#+BEGIN_SRC js
-(format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
-         body, ' return state; }']))
 #+END_SRC
 
 grammar_template1:
