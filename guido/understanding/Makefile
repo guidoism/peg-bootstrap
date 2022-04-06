@@ -22,3 +22,7 @@ literate:
 	node literate.4.js literate.b.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.5.js
 	node literate.4.js literate.b.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.6.js
 	diff literate.5.js literate.6.js
+	node literate.6.js literate.c.peg | js-beautify --end-with-newline --brace-style=end-expand - > literate.7.js
+	node literate.7.js literate.c.peg
+
+

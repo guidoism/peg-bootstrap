@@ -99,26 +99,7 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['State pars
  .
 grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
  
-                  / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
-   ` function parse_char(input, pos) {
-     if (pos >= input.length) return null;
-     return { pos: pos + 1, val: input.charAt(pos) };
-   }
-   function literal(input, pos, string) {
-     if (input.substr(pos, string.length) === string) {
-       return { pos: pos + string.length, val: string };
-     } else return null;
-   }
-   let format = (parts) => parts.join('')
-   var fs = require(\'fs\');
-   var grammarfile = process.argv.slice(2)[0];
-   fs.readFile(grammarfile, function(err, data) {
-       if (err) {
-	   throw err; 
-       }
-       var out = parse_grammar(data.toString(), 0);
-       console.log(out.val);
-   });`)
+                  / _ r: rule -> (format([r, "\n// END\n"]))
  .
 meta              <- '!'   
                   / '\''   
@@ -140,9 +121,9 @@ term              <- labeled
                   / parenthesized   .
 nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (valid) { var(', label, 'state.val); }']))
+labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (valid) { var("', label, '", state.val); }']))
  .
-sequence          <- foo: term  bar: sequence -> (`${foo}  if (state) { ${bar} }\n`)
+sequence          <- foo: term  bar: sequence -> (format([foo, ' if (valid) { ', bar, ' } ']))
  
                   / result_expression   
                   /  -> ('')
@@ -277,6 +258,17 @@ probably pretty fragile so we should consider something better.
   Note: The `B`-series templates are made to do string interpolation in a way
   closer to other languages and easier to port to C and assembly.
 
+  Note: The `C`-series templates generate javascript code which on the next
+  pass will generate C code. In order for that C code to be able to generate
+  itself we will need a `D`-series which is slightly tweaked to use C string
+  formating rather than javascript string templating.
+
+  `node literate.6.js literate.c.peg > literate.7.js`
+
+  In this example literate.7.js is a javascript program that will generate
+  a C parser.
+  
+  
 ** rule_template
 
    Each rule is represented and generated as a single function. These
@@ -324,7 +316,7 @@ labeled_template:
 
 #+NAME: C.labeled_template
 #+BEGIN_SRC js
-(format([value, ' if (valid) { var(', label, 'state.val); }']))
+(format([value, ' if (valid) { var("', label, '", state.val); }']))
 #+END_SRC
 
 result_expr_template:
@@ -419,6 +411,11 @@ sequence_template1:
 (format([foo, ' if (state) { ', bar, ' } ']))
 #+END_SRC
 
+#+NAME: C.sequence_template1
+#+BEGIN_SRC js
+(format([foo, ' if (valid) { ', bar, ' } ']))
+#+END_SRC
+
 sequence_template2:
 #+NAME: sequence_template2
 #+BEGIN_SRC js
@@ -508,12 +505,56 @@ grammar_template2:
    });`)
 #+END_SRC
 
+#+NAME: C.grammar_template2
+#+BEGIN_SRC js
+(format([r, "\n// END\n"]))
+#+END_SRC js
+
 name_template:
 #+NAME: name_template
 #+BEGIN_SRC js
 (c + n)
 #+END_SRC
 
+* C Helper Functions
 
+#+NAME: c_include
+#+BEGIN_SRC c
 
+  #include <stdbool.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #define GB_STRING_IMPLEMENTATION
+  #include "gb_string.h"
+
+  typedef gbString str;
+
+  typedef struct State {
+      int pos;
+      str val;
+      bool null;
+  } State;
+
+  typedef struct Stack {
+      State states[32];
+      int n;
+  } Stack;
+
+  typedef struct Variable {
+      str key;
+      str value;
+  } Variable;
+
+  typedef struct Variables {
+      Variable items[32];
+      int n;
+  } Variables;
+
+  #define valid (!state.null)
+  #define invalid (state.null)
+  #define var(key, value) vars.items[vars.n++] = (Variable){.key=copy(key), .value=copy(value)};
+  #define push(o) stack.states[stack.n++] = o
+  #define pop() stack.states[--stack.n];
+
+#+END_SRC
 
