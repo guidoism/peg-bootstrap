@@ -4,48 +4,49 @@ I'm trying to create a self-compiling PEG parser.
 * The rules
 
 #+TBLNAME: rules
-| sp                | <- | ' '                                         |    |                          |   |
-|                   | /  | '\n'                                        |    |                          |   |
-|                   | /  | '\t'                                        |    |                          | . |
-| sps               | <- | sp sps                                      |    |                          |   |
-|                   | /  |                                             |    |                          | . |
-| rule              | <- | n: name sps '<-' sps body: choice '.' sps   | -> | rule_template            | . |
-| grammar           | <- | sps r: rule g: grammar                      | -> | grammar_template1        |   |
-|                   | /  | sps r: rule                                 | -> | grammar_template2        | . |
-| meta              | <- | '!'                                         |    |                          |   |
-|                   | /  | '\''                                        |    |                          |   |
-|                   | /  | '<-'                                        |    |                          |   |
-|                   | /  | '/'                                         |    |                          |   |
-|                   | /  | '.'                                         |    |                          |   |
-|                   | /  | '('                                         |    |                          |   |
-|                   | /  | ')'                                         |    |                          |   |
-|                   | /  | ':'                                         |    |                          |   |
-|                   | /  | '->'                                        |    |                          | . |
-| name              | <- | c: namechar n: name                         | -> | name_template            |   |
-|                   | /  | namechar                                    |    |                          | . |
-| namechar          | <- | !meta !sp char                              |    |                          | . |
-| term              | <- | labeled                                     |    |                          |   |
-|                   | /  | nonterminal                                 |    |                          |   |
-|                   | /  | string                                      |    |                          |   |
-|                   | /  | negation                                    |    |                          |   |
-|                   | /  | parenthesized                               |    |                          | . |
-| nonterminal       | <- | n: name sps                                 | -> | nonterminal_template     | . |
-| labeled           | <- | label: name sps ':' sps value: term         | -> | labeled_template         | . |
-| sequence          | <- | foo: term  bar: sequence                    | -> | sequence_template1       |   |
-|                   | /  | result_expression                           |    |                          |   |
-|                   | /  |                                             | -> | sequence_template2       | . |
-| string            | <- | '\'' s: stringcontents '\'' sps             | -> | string_template          | . |
-| stringcontents    | <- | !'\\' !'\'' c: char s: stringcontents       | -> | stringcontents_template1 |   |
-|                   | /  | b: '\\' c: char s: stringcontents           | -> | stringcontents_template2 |   |
-|                   | /  |                                             | -> | stringcontents_template3 | . |
-| choice            | <- | a: sequence '/' sps  b: choice              | -> | choice_template          |   |
-|                   | /  | sequence                                    |    |                          | . |
-| negation          | <- | '!' sps t: term                             | -> | negation_template        | . |
-| result_expression | <- | '->' sps result: expr sps                   | -> | result_expr_template     | . |
-| expr              | <- | '(' sps e: exprcontents ')'                 | -> | expr_template            | . |
-| exprcontents      | <- | c: (!'(' !')' char / expr)  e: exprcontents | -> | exprcontents_template1   |   |
-|                   | /  |                                             | -> | exprcontents_template2   | . |
-| parenthesized     | <- | '(' sps body: choice ')' sps                | -> | (body)                   | . |
+| sp                | <- | ' '                                                     |    |                          |   |
+|                   | /  | '\n'                                                    |    |                          |   |
+|                   | /  | '\t'                                                    |    |                          | . |
+| sps               | <- | sp sps                                                  |    |                          |   |
+|                   | /  |                                                         |    |                          | . |
+| rule              | <- | n: name sps '<-' sps body: choice '.' sps               | -> | rule_template            | . |
+| grammar           | <- | sps r: rule g: grammar                                  | -> | grammar_template1        |   |
+|                   | /  | sps r: rule                                             | -> | grammar_template2        | . |
+| meta              | <- | '!'                                                     |    |                          |   |
+|                   | /  | '\''                                                    |    |                          |   |
+|                   | /  | '<-'                                                    |    |                          |   |
+|                   | /  | '/'                                                     |    |                          |   |
+|                   | /  | '.'                                                     |    |                          |   |
+|                   | /  | '('                                                     |    |                          |   |
+|                   | /  | ')'                                                     |    |                          |   |
+|                   | /  | ':'                                                     |    |                          |   |
+|                   | /  | '->'                                                    |    |                          | . |
+| name              | <- | c: namechar n: name                                     | -> | name_template            |   |
+|                   | /  | namechar                                                |    |                          | . |
+| namechar          | <- | !meta !sp char                                          |    |                          | . |
+| term              | <- | labeled                                                 |    |                          |   |
+|                   | /  | nonterminal                                             |    |                          |   |
+|                   | /  | string                                                  |    |                          |   |
+|                   | /  | negation                                                |    |                          |   |
+|                   | /  | parenthesized                                           |    |                          | . |
+| nonterminal       | <- | n: name sps                                             | -> | nonterminal_template     | . |
+| labeled           | <- | label: name sps ':' sps value: term                     | -> | labeled_template         | . |
+| sequence          | <- | foo: term  bar: sequence                                | -> | sequence_template1       |   |
+|                   | /  | result_expression                                       |    |                          |   |
+|                   | /  |                                                         | -> | sequence_template2       | . |
+| string            | <- | '\'' s: stringcontents '\'' sps                         | -> | string_template          | . |
+| stringcontents    | <- | !'\\' !'\'' c: char s: stringcontents                   | -> | stringcontents_template1 |   |
+|                   | /  | b: '\\' c: char s: stringcontents                       | -> | stringcontents_template2 |   |
+|                   | /  |                                                         | -> | stringcontents_template3 | . |
+| choice            | <- | a: sequence '/' sps  b: choice                          | -> | choice_template          |   |
+|                   | /  | sequence                                                |    |                          | . |
+| negation          | <- | '!' sps t: term                                         | -> | negation_template        | . |
+| result_expression | <- | '->' sps result: expr sps                               | -> | result_expr_template     | . |
+| expr              | <- | '(' sps e: exprcontents ')'                             | -> | expr_template            | . |
+| exprcontents      | <- | c: (!'(' !')' (location / char) / expr) e: exprcontents | -> | exprcontents_template1   |   |
+|                   | /  |                                                         | -> | exprcontents_template2   | . |
+| location          | <- | '§' n: name                                             | -> | location_template        | . |
+| parenthesized     | <- | '(' sps body: choice ')' sps                            | -> | (body)                   | . |
 
 
 * Helper scripts to tie everything together at the end
@@ -151,9 +152,11 @@ result_expression <- '->' _ result: expr _ -> (format(['if (valid) { state.val =
  .
 expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
  .
-exprcontents      <- c: (!'(' !')' char / expr)  e: exprcontents -> (c + e)
+exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (c + e)
  
                   /  -> ('')
+ .
+location          <- '§' n: name -> ('POOP')
  .
 parenthesized     <- '(' _ body: choice ')' _ -> (body) .
 #+end_example
@@ -514,6 +517,12 @@ name_template:
 #+NAME: name_template
 #+BEGIN_SRC js
 (c + n)
+#+END_SRC
+
+location_template:
+#+NAME: location_template
+#+BEGIN_SRC js
+('POOP')
 #+END_SRC
 
 * C Helper Functions
