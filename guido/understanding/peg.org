@@ -46,7 +46,7 @@ I'm trying to create a self-compiling PEG parser.
 | exprcontents      | <- | c: (!'(' !')' (location / char) / expr) e: exprcontents | -> | exprcontents_template1   |   |
 |                   | /  |                                                         | -> | exprcontents_template2   | . |
 | location          | <- | '§' n: name                                             | -> | location_template        | . |
-| parenthesized     | <- | '(' sps body: choice ')' sps                            | -> | (body)                   | . |
+| parenthesized     | <- | '(' sps body: choice ')' sps                            | -> | body_template            | . |
 
 
 * Helper scripts to tie everything together at the end
@@ -59,7 +59,7 @@ I'm trying to create a self-compiling PEG parser.
   out = []
   for (name, larrow, body, rarrow, action, end) in rules:
       if action and action[0] != '(':
-	  action = blocks.get(action) or 'NOT FOUND'
+          action = blocks.get(action) or 'NOT FOUND'
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
   output = output.replace('sps', '_')
@@ -68,8 +68,8 @@ I'm trying to create a self-compiling PEG parser.
   out = []
   for (name, larrow, body, rarrow, action, end) in rules:
       if action and action[0] != '(':
-	  b_action = f'B.{action}'
-	  action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
+          b_action = f'B.{action}'
+          action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
   output = output.replace('sps', '_')
@@ -78,8 +78,8 @@ I'm trying to create a self-compiling PEG parser.
   out = []
   for (name, larrow, body, rarrow, action, end) in rules:
       if action and action[0] != '(':
-	  b_action = f'C.{action}'
-	  action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
+          b_action = f'C.{action}'
+          action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
   output = output.replace('sps', '_')
@@ -88,8 +88,9 @@ I'm trying to create a self-compiling PEG parser.
   out = []
   for (name, larrow, body, rarrow, action, end) in rules:
       if action and action[0] != '(':
-	  b_action = f'D.{action}'
-	  action = blocks.get(b_action) or blocks.get(action) or 'NOT FOUND'
+          d_action = f'D.{action}'
+          # We absolutely need the d_action or this won't work with the vars
+          action = blocks.get(d_action) or 'NOT FOUND'
       out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
   output = '\n'.join(out)
   output = output.replace('sps', '_')
@@ -124,29 +125,8 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function p
            vars['body'],
            ' return state; }']))
  .
-grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
- 
-                  / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
-   ` function parse_char(input, pos) {
-     if (pos >= input.length) return null;
-     return { pos: pos + 1, val: input.charAt(pos) };
-   }
-   function literal(input, pos, string) {
-     if (input.substr(pos, string.length) === string) {
-       return { pos: pos + string.length, val: string };
-     } else return null;
-   }
-   let format = (parts) => parts.join('')
-   var fs = require(\'fs\');
-   var grammarfile = process.argv.slice(2)[0];
-   fs.readFile(grammarfile, function(err, data) {
-       if (err) {
-	   throw err; 
-       }
-       var out = parse_grammar(data.toString(), 0);
-       console.log(out.val);
-   });`)
- .
+grammar           <- _ r: rule g: grammar -> (format([vars['r'], ' ', vars['g']]))
+                  / _ r: rule -> NOT FOUND .
 meta              <- '!'   
                   / '\''   
                   / '<-'   
@@ -156,7 +136,7 @@ meta              <- '!'
                   / ')'   
                   / ':'   
                   / '->'   .
-name              <- c: namechar n: name -> (c + n)
+name              <- c: namechar n: name -> (format([vars['c'], vars['d']]))
  
                   / namechar   .
 namechar          <- !meta !sp char   .
@@ -165,7 +145,7 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
+nonterminal       <- n: name _ -> (format(['state = parse_', vars['n'], '(input, state.pos);']))
  .
 labeled           <- label: name _ ':' _ value: term -> (format([vars['value'],
            ' if (state) { vars["',
@@ -178,18 +158,16 @@ sequence          <- foo: term  bar: sequence -> (format([vars['foo'],
            ' } ']))
  
                   / result_expression   
-                  /  -> ('')
- .
+                  /  -> NOT FOUND .
 string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \"',
            vars['s'],
            '\");']))
  .
-stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
+stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([vars['c'], vars['s']]))
  
-                  / b: '\\' c: char s: stringcontents -> (b + c + s)
+                  / b: '\\' c: char s: stringcontents -> (format([vars['b'], vars['c'], vars['s']]))
  
-                  /  -> ('')
- .
+                  /  -> NOT FOUND .
 choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
 	      vars['a'],
 	      ' if (!state) {state = stack.pop(); ',
@@ -206,15 +184,14 @@ result_expression <- '->' _ result: expr _ -> (format(['if (valid) { state.val =
            vars['result'],
            '; }']))
  .
-expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
+expr              <- '(' _ e: exprcontents ')' -> (format(['(', vars['e'], ')']))
  .
-exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (c + e)
+exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (format([vars['c'], vars['e']]))
  
-                  /  -> ('')
+                  /  -> NOT FOUND .
+location          <- '§' n: name -> NOT FOUND .
+parenthesized     <- '(' _ body: choice ')' _ -> (format([vars['body']]))
  .
-location          <- '§' n: name -> ('POOP')
- .
-parenthesized     <- '(' _ body: choice ')' _ -> (body) .
 #+end_example
 
 
@@ -586,10 +563,20 @@ stringcontents_template1:
 (c + s)
 #+END_SRC
 
+#+NAME: D.stringcontents_template1
+#+BEGIN_SRC js
+(format([vars['c'], vars['s']]))
+#+END_SRC
+
 stringcontents_template2:
 #+NAME: stringcontents_template2
 #+BEGIN_SRC js
 (b + c + s)
+#+END_SRC
+
+#+NAME: D.stringcontents_template2
+#+BEGIN_SRC js
+(format([vars['b'], vars['c'], vars['s']]))
 #+END_SRC
 
 stringcontents_template3:
@@ -604,10 +591,20 @@ expr_template:
 ('(' + e + ')')
 #+END_SRC
 
+#+NAME: D.expr_template
+#+BEGIN_SRC js
+(format(['(', vars['e'], ')']))
+#+END_SRC
+
 exprcontents_template1:
 #+NAME: exprcontents_template1
 #+BEGIN_SRC js
 (c + e)
+#+END_SRC
+
+#+NAME: D.exprcontents_template1
+#+BEGIN_SRC js
+(format([vars['c'], vars['e']]))
 #+END_SRC
 
 exprcontents_template2:
@@ -627,6 +624,11 @@ nonterminal_template:
 (format(['state = parse_', n, '(input, state.pos);']))
 #+END_SRC
 
+#+NAME: D.nonterminal_template
+#+BEGIN_SRC js
+(format(['state = parse_', vars['n'], '(input, state.pos);']))
+#+END_SRC
+
 grammar_template1:
 #+NAME: grammar_template1
 #+BEGIN_SRC js
@@ -636,6 +638,11 @@ grammar_template1:
 #+NAME: B.grammar_template1
 #+BEGIN_SRC js
 (format([r, ' ', g]))
+#+END_SRC
+
+#+NAME: D.grammar_template1
+#+BEGIN_SRC js
+(format([vars['r'], ' ', vars['g']]))
 #+END_SRC
 
 grammar_template2:
@@ -663,7 +670,7 @@ grammar_template2:
    });`)
 #+END_SRC
 
-#+NAME: C.grammar_template2
+#+NAME: CLANG.grammar_template2
 #+BEGIN_SRC js
 (format([r, "\n// END\n"]))
 #+END_SRC js
@@ -674,11 +681,29 @@ name_template:
 (c + n)
 #+END_SRC
 
+#+NAME: D.name_template
+#+BEGIN_SRC js
+(format([vars['c'], vars['d']]))
+#+END_SRC
+
 location_template:
 #+NAME: location_template
 #+BEGIN_SRC js
 ('POOP')
 #+END_SRC
+
+body_template:
+#+NAME: body_template
+#+BEGIN_SRC js
+(body)
+#+END_SRC
+
+#+NAME: D.body_template
+#+BEGIN_SRC js
+(format([vars['body']]))
+#+END_SRC
+
+
 
 * C Helper Functions
 
