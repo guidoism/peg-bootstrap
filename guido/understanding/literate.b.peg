@@ -6,7 +6,7 @@ _               <- sp _
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_', n, '(input, pos) { var state = { pos: pos }; var stack = []; ',
          body, ' return state; }']))
  .
-grammar           <- _ r: rule g: grammar -> (format([r, ' ', g]))
+grammar           <- _ r: rule g: grammar -> (format([r, " ", g]))
  
                   / _ r: rule -> ('// This is from a template in peg.org:\n' + r +
    ` function parse_char(input, pos) {
@@ -62,7 +62,7 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   / b: '\\' c: char s: stringcontents -> (b + c + s)
  
-                  /  -> ('')
+                  /  -> ("")
  .
 choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
 	      a,
@@ -77,13 +77,13 @@ negation          <- '!' _ t: term -> (format([' stack.push(state);', t,
  .
 result_expression <- '->' _ result: expr _ -> (format(['if (state) { state.val = ', result, '; }']))
  .
-expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
+expr              <- '(' _ e: exprcontents ')' -> ("(" + e + ")")
  .
 exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (c + e)
  
-                  /  -> ('')
+                  /  -> ("")
  .
-location          <- '§' n: name -> ('POOP')
+location          <- '§' n: name -> ("POOP")
  .
 parenthesized     <- '(' _ body: choice ')' _ -> (body)
  .

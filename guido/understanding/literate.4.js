@@ -104,7 +104,7 @@ function parse_grammar(input, pos) {
                 var g = state.val;
             }
             if (state) {
-                if (state) state.val = (format([r, ' ', g]));
+                if (state) state.val = (format([r, " ", g]));
             }
         }
     }
@@ -519,7 +519,7 @@ function parse_stringcontents(input, pos) {
         }
         if (!state) {
             state = stack.pop();
-            if (state) state.val = ('');
+            if (state) state.val = ("");
         }
         else {
             stack.pop();
@@ -638,7 +638,7 @@ function parse_expr(input, pos) {
             if (state) {
                 state = literal(input, state.pos, ')');
                 if (state) {
-                    if (state) state.val = ('(' + e + ')');
+                    if (state) state.val = ("(" + e + ")");
                 }
             }
         }
@@ -712,7 +712,7 @@ function parse_exprcontents(input, pos) {
     }
     if (!state) {
         state = stack.pop();
-        if (state) state.val = ('');
+        if (state) state.val = ("");
     }
     else {
         stack.pop();
@@ -732,7 +732,7 @@ function parse_location(input, pos) {
             var n = state.val;
         }
         if (state) {
-            if (state) state.val = ('POOP');
+            if (state) state.val = ("POOP");
         }
     }
 

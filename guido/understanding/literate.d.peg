@@ -3,16 +3,16 @@ sp                <- ' '
                   / '\t'   .
 _               <- sp _   
                   /    .
-rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_',
-           vars['n'],
-           '(input, pos) { let state = { pos: pos }; let stack = []; ',
-           'let vars = {}',
-           vars['body'],
-           ' return state; }']))
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
+           vars["n"],
+           "(input, pos) { let state = { pos: pos }; let stack = []; ",
+           "let vars = {}",
+           vars["body"],
+           " return state; }"]))
  .
-grammar           <- _ r: rule g: grammar -> (format([vars['r'], ' ', vars['g']]))
+grammar           <- _ r: rule g: grammar -> (format([vars["r"], " ", vars["g"]]))
  
-                  / _ r: rule -> (format(['// This is from a template in peg.org:\n', vars['r'], 
+                  / _ r: rule -> (format(["// This is from a template in peg.org:\n", vars["r"], 
    ` function parse_char(input, pos) {
      if (pos >= input.length) return null;
      return { pos: pos + 1, val: input.charAt(pos) };
@@ -42,7 +42,7 @@ meta              <- '!'
                   / ')'   
                   / ':'   
                   / '->'   .
-name              <- c: namechar n: name -> (format([vars['c'], vars['n']]))
+name              <- c: namechar n: name -> (format([vars["c"], vars["n"]]))
  
                   / namechar   .
 namechar          <- !meta !sp char   .
@@ -51,54 +51,54 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (format(['state = parse_', vars['n'], '(input, state.pos);']))
+nonterminal       <- n: name _ -> (format(["state = parse_", vars["n"], "(input, state.pos);"]))
  .
-labeled           <- label: name _ ':' _ value: term -> (format([vars['value'],
-           ' if (state) { vars["',
-           vars['label'],
-           '"] = state.val; }']))
+labeled           <- label: name _ ':' _ value: term -> (format([vars["value"],
+           " if (state) { vars[\"",
+           vars["label"],
+           "\"] = state.val; }"]))
  .
-sequence          <- foo: term  bar: sequence -> (format([vars['foo'],
-           ' if (state) { ',
-           vars['bar'],
-           ' } ']))
+sequence          <- foo: term  bar: sequence -> (format([vars["foo"],
+           " if (state) { ",
+           vars["bar"],
+           " } "]))
  
                   / result_expression   
-                  /  -> ('')
+                  /  -> ("")
  .
-string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \"',
-           vars['s'],
-           '\");']))
+string            <- '\'' s: stringcontents '\'' _ -> (format(["state = literal(input, state.pos, \"",
+           vars["s"],
+           "\");"]))
  .
-stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([vars['c'], vars['s']]))
+stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([vars["c"], vars["s"]]))
  
-                  / b: '\\' c: char s: stringcontents -> (format([vars['b'], vars['c'], vars['s']]))
+                  / b: '\\' c: char s: stringcontents -> (format([vars["b"], vars["c"], vars["s"]]))
  
-                  /  -> ('')
+                  /  -> ("")
  .
-choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
-	      vars['a'],
-	      ' if (!state) {state = stack.pop(); ',
-	      vars['b'],
-	      '} else { stack.pop(); }']))
+choice            <- a: sequence '/' _  b: choice -> (format(["stack.push(state); ",
+	      vars["a"],
+	      " if (!state) {state = stack.pop(); ",
+	      vars["b"],
+	      "} else { stack.pop(); }"]))
  
                   / sequence   .
-negation          <- '!' _ t: term -> (format([' stack.push(state);',
-            vars['t'], 
-            'if (state) { stack.pop(); state = null; }',
-            'else { state = stack.pop(); }']))
+negation          <- '!' _ t: term -> (format([" stack.push(state);",
+            vars["t"], 
+            "if (state) { stack.pop(); state = null; }",
+            "else { state = stack.pop(); }"]))
  .
-result_expression <- '->' _ result: expr _ -> (format(['if (state) { state.val = ',
-           vars['result'],
-           '; }']))
+result_expression <- '->' _ result: expr _ -> (format(["if (state) { state.val = ",
+           vars["result"],
+           "; }"]))
  .
-expr              <- '(' _ e: exprcontents ')' -> (format(['(', vars['e'], ')']))
+expr              <- '(' _ e: exprcontents ')' -> (format(["(", vars["e"], ")"]))
  .
-exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (format([vars['c'], vars['e']]))
+exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (format([vars["c"], vars["e"]]))
  
-                  /  -> ('')
+                  /  -> ("")
  .
-location          <- '§' n: name -> ('POOP')
+location          <- '§' n: name -> ("POOP")
  .
-parenthesized     <- '(' _ body: choice ')' _ -> (format([vars['body']]))
+parenthesized     <- '(' _ body: choice ')' _ -> (format([vars["body"]]))
  .

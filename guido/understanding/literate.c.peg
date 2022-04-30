@@ -71,7 +71,7 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   / b: '\\' c: char s: stringcontents -> (b + c + s)
  
-                  /  -> ('')
+                  /  -> ("")
  .
 choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
 	      a,
@@ -87,13 +87,13 @@ negation          <- '!' _ t: term -> (format([' stack.push(state);',
  .
 result_expression <- '->' _ result: expr _ -> (`if (state) state.val = ${result};\n`)
  .
-expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
+expr              <- '(' _ e: exprcontents ')' -> ("(" + e + ")")
  .
 exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (c + e)
  
-                  /  -> ('')
+                  /  -> ("")
  .
-location          <- '§' n: name -> ('POOP')
+location          <- '§' n: name -> ("POOP")
  .
 parenthesized     <- '(' _ body: choice ')' _ -> (body)
  .

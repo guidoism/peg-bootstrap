@@ -74,12 +74,12 @@ function parse_rule(input, pos) {
                         if (state) {
                             state = parse__(input, state.pos);
                             if (state) {
-                                if (state) state.val = (format(['function parse_',
-                                    vars['n'],
-                                    '(input, pos) { let state = { pos: pos }; let stack = []; ',
-                                    'let vars = {}',
-                                    vars['body'],
-                                    ' return state; }'
+                                if (state) state.val = (format(["function parse_",
+                                    vars["n"],
+                                    "(input, pos) { let state = { pos: pos }; let stack = []; ",
+                                    "let vars = {}",
+                                    vars["body"],
+                                    " return state; }"
                                 ]));
                             }
                         }
@@ -110,7 +110,7 @@ function parse_grammar(input, pos) {
                 vars["g"] = state.val;
             }
             if (state) {
-                if (state) state.val = (format([vars['r'], ' ', vars['g']]));
+                if (state) state.val = (format([vars["r"], " ", vars["g"]]));
             }
         }
     }
@@ -123,7 +123,7 @@ function parse_grammar(input, pos) {
                 vars["r"] = state.val;
             }
             if (state) {
-                if (state) state.val = (format(['// This is from a template in peg.org:\n', vars['r'],
+                if (state) state.val = (format(["// This is from a template in peg.org:\n", vars["r"],
                     ` function parse_char(input, pos) {
      if (pos >= input.length) return null;
      return { pos: pos + 1, val: input.charAt(pos) };
@@ -253,7 +253,7 @@ function parse_name(input, pos) {
             vars["n"] = state.val;
         }
         if (state) {
-            if (state) state.val = (format([vars['c'], vars['n']]));
+            if (state) state.val = (format([vars["c"], vars["n"]]));
         }
     }
     if (!state) {
@@ -360,7 +360,7 @@ function parse_nonterminal(input, pos) {
     if (state) {
         state = parse__(input, state.pos);
         if (state) {
-            if (state) state.val = (format(['state = parse_', vars['n'], '(input, state.pos);']));
+            if (state) state.val = (format(["state = parse_", vars["n"], "(input, state.pos);"]));
         }
     }
     return state;
@@ -388,10 +388,10 @@ function parse_labeled(input, pos) {
                         vars["value"] = state.val;
                     }
                     if (state) {
-                        if (state) state.val = (format([vars['value'],
-                            ' if (state) { vars["',
-                            vars['label'],
-                            '"] = state.val; }'
+                        if (state) state.val = (format([vars["value"],
+                            " if (state) { vars[\"",
+                            vars["label"],
+                            "\"] = state.val; }"
                         ]));
                     }
                 }
@@ -418,10 +418,10 @@ function parse_sequence(input, pos) {
             vars["bar"] = state.val;
         }
         if (state) {
-            if (state) state.val = (format([vars['foo'],
-                ' if (state) { ',
-                vars['bar'],
-                ' } '
+            if (state) state.val = (format([vars["foo"],
+                " if (state) { ",
+                vars["bar"],
+                " } "
             ]));
         }
     }
@@ -432,7 +432,7 @@ function parse_sequence(input, pos) {
         if (state) {}
         if (!state) {
             state = stack.pop();
-            if (state) state.val = ('');
+            if (state) state.val = ("");
         }
         else {
             stack.pop();
@@ -461,9 +461,9 @@ function parse_string(input, pos) {
             if (state) {
                 state = parse__(input, state.pos);
                 if (state) {
-                    if (state) state.val = (format(['state = literal(input, state.pos, \"',
-                        vars['s'],
-                        '\");'
+                    if (state) state.val = (format(["state = literal(input, state.pos, \"",
+                        vars["s"],
+                        "\");"
                     ]));
                 }
             }
@@ -509,7 +509,7 @@ function parse_stringcontents(input, pos) {
                     vars["s"] = state.val;
                 }
                 if (state) {
-                    if (state) state.val = (format([vars['c'], vars['s']]));
+                    if (state) state.val = (format([vars["c"], vars["s"]]));
                 }
             }
         }
@@ -532,13 +532,13 @@ function parse_stringcontents(input, pos) {
                     vars["s"] = state.val;
                 }
                 if (state) {
-                    if (state) state.val = (format([vars['b'], vars['c'], vars['s']]));
+                    if (state) state.val = (format([vars["b"], vars["c"], vars["s"]]));
                 }
             }
         }
         if (!state) {
             state = stack.pop();
-            if (state) state.val = ('');
+            if (state) state.val = ("");
         }
         else {
             stack.pop();
@@ -571,11 +571,11 @@ function parse_choice(input, pos) {
                     vars["b"] = state.val;
                 }
                 if (state) {
-                    if (state) state.val = (format(['stack.push(state); ',
-                        vars['a'],
-                        ' if (!state) {state = stack.pop(); ',
-                        vars['b'],
-                        '} else { stack.pop(); }'
+                    if (state) state.val = (format(["stack.push(state); ",
+                        vars["a"],
+                        " if (!state) {state = stack.pop(); ",
+                        vars["b"],
+                        "} else { stack.pop(); }"
                     ]));
                 }
             }
@@ -607,10 +607,10 @@ function parse_negation(input, pos) {
                 vars["t"] = state.val;
             }
             if (state) {
-                if (state) state.val = (format([' stack.push(state);',
-                    vars['t'],
-                    'if (state) { stack.pop(); state = null; }',
-                    'else { state = stack.pop(); }'
+                if (state) state.val = (format([" stack.push(state);",
+                    vars["t"],
+                    "if (state) { stack.pop(); state = null; }",
+                    "else { state = stack.pop(); }"
                 ]));
             }
         }
@@ -635,9 +635,9 @@ function parse_result_expression(input, pos) {
             if (state) {
                 state = parse__(input, state.pos);
                 if (state) {
-                    if (state) state.val = (format(['if (state) { state.val = ',
-                        vars['result'],
-                        '; }'
+                    if (state) state.val = (format(["if (state) { state.val = ",
+                        vars["result"],
+                        "; }"
                     ]));
                 }
             }
@@ -663,7 +663,7 @@ function parse_expr(input, pos) {
             if (state) {
                 state = literal(input, state.pos, ")");
                 if (state) {
-                    if (state) state.val = (format(['(', vars['e'], ')']));
+                    if (state) state.val = (format(["(", vars["e"], ")"]));
                 }
             }
         }
@@ -730,12 +730,12 @@ function parse_exprcontents(input, pos) {
             vars["e"] = state.val;
         }
         if (state) {
-            if (state) state.val = (format([vars['c'], vars['e']]));
+            if (state) state.val = (format([vars["c"], vars["e"]]));
         }
     }
     if (!state) {
         state = stack.pop();
-        if (state) state.val = ('');
+        if (state) state.val = ("");
     }
     else {
         stack.pop();
@@ -756,7 +756,7 @@ function parse_location(input, pos) {
             vars["n"] = state.val;
         }
         if (state) {
-            if (state) state.val = ('POOP');
+            if (state) state.val = ("POOP");
         }
     }
     return state;
@@ -781,7 +781,7 @@ function parse_parenthesized(input, pos) {
                 if (state) {
                     state = parse__(input, state.pos);
                     if (state) {
-                        if (state) state.val = (format([vars['body']]));
+                        if (state) state.val = (format([vars["body"]]));
                     }
                 }
             }
