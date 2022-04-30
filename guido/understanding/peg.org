@@ -88,6 +88,15 @@ I'm trying to create a self-compiling PEG parser.
   return output
 #+END_SRC
 
+The C-series templates move the variables from Javascript
+function-scoped `var`-style variables to a function-scoped
+dictionary called `vars` which will be used by the `format`
+function.
+
+TODO: Use the vars dictionary
+TODO: Keep all strings in a buffer and refer to them with (index, length) tuples.
+
+
 #+RESULTS: pegfile
 #+begin_example
 sp                <- ' '   
