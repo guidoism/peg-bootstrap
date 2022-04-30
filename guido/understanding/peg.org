@@ -157,7 +157,7 @@ meta              <- '!'
                   / ')'   
                   / ':'   
                   / '->'   .
-name              <- c: namechar n: name -> (format([vars['c'], vars['d']]))
+name              <- c: namechar n: name -> (format([vars['c'], vars['n']]))
  
                   / namechar   .
 namechar          <- !meta !sp char   .
@@ -747,7 +747,7 @@ name_template:
 
 #+NAME: D.name_template
 #+BEGIN_SRC js
-(format([vars['c'], vars['d']]))
+(format([vars['c'], vars['n']]))
 #+END_SRC
 
 location_template:
