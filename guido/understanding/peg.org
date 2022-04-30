@@ -89,9 +89,12 @@ I'm trying to create a self-compiling PEG parser.
 #+END_SRC
 
 The C-series templates move the variables from Javascript
-function-scoped `var`-style variables to a function-scoped
-dictionary called `vars` which will be used by the `format`
-function.
+function-scoped `var`-style variables to a function-scoped dictionary
+called `vars` which will be used by the `format` function.
+
+After these templates are run then we will have a parser than can
+accept templates that make use of the vars dictionary, which is what
+the D-series templates will do.
 
 TODO: Use the vars dictionary
 TODO: Keep all strings in a buffer and refer to them with (index, length) tuples.
@@ -104,9 +107,12 @@ sp                <- ' '
                   / '\t'   .
 _               <- sp _   
                   /    .
-rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_', n, '(input, pos) { let state = { pos: pos }; let stack = []; ',
-         'let vars = {}',
-         body, ' return state; }']))
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_',
+           n,
+           '(input, pos) { let state = { pos: pos }; let stack = []; ',
+           'let vars = {}',
+           body,
+           ' return state; }']))
  .
 grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
  
@@ -132,14 +138,22 @@ term              <- labeled
                   / parenthesized   .
 nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) { vars["', label, '"] = state.val; }']))
+labeled           <- label: name _ ':' _ value: term -> (format([value,
+           ' if (state) { vars["',
+           label,
+           '"] = state.val; }']))
  .
-sequence          <- foo: term  bar: sequence -> (format([foo, ' if (valid) { ', bar, ' } ']))
+sequence          <- foo: term  bar: sequence -> (format([foo,
+           ' if (valid) { ',
+           bar,
+           ' } ']))
  
                   / result_expression   
                   /  -> ('')
  .
-string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \"', s, '\");']))
+string            <- '\'' s: stringcontents '\'' _ -> (format(['state = literal(input, state.pos, \"',
+           s,
+           '\");']))
  .
 stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
@@ -154,11 +168,14 @@ choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state)
 	      '} else { stack.pop(); }']))
  
                   / sequence   .
-negation          <- '!' _ t: term -> (format([' stack.push(state);', t, 
-	   'if (state) { stack.pop(); state = null; }',
-	   'else { state = stack.pop(); }']))
+negation          <- '!' _ t: term -> (format([' stack.push(state);',
+            t, 
+            'if (state) { stack.pop(); state = null; }',
+            'else { state = stack.pop(); }']))
  .
-result_expression <- '->' _ result: expr _ -> (format(['if (valid) { state.val = ', result, '; }']))
+result_expression <- '->' _ result: expr _ -> (format(['if (valid) { state.val = ',
+           result,
+           '; }']))
  .
 expr              <- '(' _ e: exprcontents ')' -> ('(' + e + ')')
  .
@@ -318,9 +335,22 @@ function parse_${n}(input, pos) {
 
 #+NAME: C.rule_template
 #+BEGIN_SRC js
-(format(['function parse_', n, '(input, pos) { let state = { pos: pos }; let stack = []; ',
-         'let vars = {}',
-         body, ' return state; }']))
+  (format(['function parse_',
+           n,
+           '(input, pos) { let state = { pos: pos }; let stack = []; ',
+           'let vars = {}',
+           body,
+           ' return state; }']))
+#+END_SRC
+
+#+NAME: D.rule_template
+#+BEGIN_SRC js
+  (format(['function parse_',
+           vars['n'],
+           '(input, pos) { let state = { pos: pos }; let stack = []; ',
+           'let vars = {}',
+           vars['body'],
+           ' return state; }']))
 #+END_SRC
 
 labeled_template:
@@ -341,7 +371,18 @@ labeled_template:
 
 #+NAME: C.labeled_template
 #+BEGIN_SRC js
-(format([value, ' if (state) { vars["', label, '"] = state.val; }']))
+  (format([value,
+           ' if (state) { vars["',
+           label,
+           '"] = state.val; }']))
+#+END_SRC
+
+#+NAME: D.labeled_template
+#+BEGIN_SRC js
+  (format([vars['value'],
+           ' if (state) { vars["',
+           vars['label'],
+           '"] = state.val; }']))
 #+END_SRC
 
 result_expr_template:
@@ -357,7 +398,16 @@ result_expr_template:
 
 #+NAME: C.result_expr_template
 #+BEGIN_SRC js
-(format(['if (valid) { state.val = ', result, '; }']))
+  (format(['if (valid) { state.val = ',
+           result,
+           '; }']))
+#+END_SRC
+
+#+NAME: D.result_expr_template
+#+BEGIN_SRC js
+  (format(['if (valid) { state.val = ',
+           vars['result'],
+           '; }']))
 #+END_SRC
 
 negation_template:
@@ -387,9 +437,18 @@ negation_template:
 
 #+NAME: C.negation_template
 #+BEGIN_SRC js
-  (format([' stack.push(state);', t, 
-	   'if (state) { stack.pop(); state = null; }',
-	   'else { state = stack.pop(); }']))
+   (format([' stack.push(state);',
+            t, 
+            'if (state) { stack.pop(); state = null; }',
+            'else { state = stack.pop(); }']))
+#+END_SRC
+
+#+NAME: D.negation_template
+#+BEGIN_SRC js
+   (format([' stack.push(state);',
+            vars['t'], 
+            'if (state) { stack.pop(); state = null; }',
+            'else { state = stack.pop(); }']))
 #+END_SRC
 
 choice_template:
@@ -425,6 +484,15 @@ choice_template:
 	      '} else { stack.pop(); }']))
 #+END_SRC
 
+#+NAME: D.choice_template
+#+BEGIN_SRC js
+     (format(['stack.push(state); ',
+	      vars['a'],
+	      ' if (!state) {state = stack.pop(); ',
+	      vars['b'],
+	      '} else { stack.pop(); }']))
+#+END_SRC
+
 string_template:
 #+NAME: string_template
 #+BEGIN_SRC js
@@ -438,7 +506,16 @@ string_template:
 
 #+NAME: C.string_template
 #+BEGIN_SRC js
-(format(['state = literal(input, state.pos, \"', s, '\");']))
+  (format(['state = literal(input, state.pos, \"',
+           s,
+           '\");']))
+#+END_SRC
+
+#+NAME: D.string_template
+#+BEGIN_SRC js
+  (format(['state = literal(input, state.pos, \"',
+           vars['s'],
+           '\");']))
 #+END_SRC
 
 sequence_template1:
@@ -454,7 +531,18 @@ sequence_template1:
 
 #+NAME: C.sequence_template1
 #+BEGIN_SRC js
-(format([foo, ' if (valid) { ', bar, ' } ']))
+  (format([foo,
+           ' if (valid) { ',
+           bar,
+           ' } ']))
+#+END_SRC
+
+#+NAME: D.sequence_template1
+#+BEGIN_SRC js
+  (format([vars['foo'],
+           ' if (valid) { ',
+           vars['bar'],
+           ' } ']))
 #+END_SRC
 
 sequence_template2:
