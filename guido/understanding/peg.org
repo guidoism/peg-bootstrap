@@ -95,7 +95,8 @@ sp                <- ' '
                   / '\t'   .
 _               <- sp _   
                   /    .
-rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['State parse_', n, '(str input, int pos) { State state = { .pos=pos }; Stack stack = {0}; ',
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(['function parse_', n, '(input, pos) { let state = { pos: pos }; let stack = []; ',
+         'let vars = {}',
          body, ' return state; }']))
  .
 grammar           <- _ r: rule g: grammar -> (`${r}\n${g}`)
@@ -122,7 +123,7 @@ term              <- labeled
                   / parenthesized   .
 nonterminal       <- n: name _ -> (`state = parse_${n}(input, state.pos);\n`)
  .
-labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (valid) { var("', label, '", state.val); }']))
+labeled           <- label: name _ ':' _ value: term -> (format([value, ' if (state) { vars["', label, '"] = state.val; }']))
  .
 sequence          <- foo: term  bar: sequence -> (format([foo, ' if (valid) { ', bar, ' } ']))
  
@@ -137,16 +138,16 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (c + s)
  
                   /  -> ('')
  .
-choice            <- a: sequence '/' _  b: choice -> (format(['push(state); ',
+choice            <- a: sequence '/' _  b: choice -> (format(['stack.push(state); ',
 	      a,
-	      ' if (invalid) { state = pop(); ',
+	      ' if (!state) {state = stack.pop(); ',
 	      b,
-	      '} else { pop(); }']))
+	      '} else { stack.pop(); }']))
  
                   / sequence   .
-negation          <- '!' _ t: term -> (format([' push(state);', t, 
-	   'if (valid) { pop(); state.null = true; }',
-	   'else { state = pop(); }']))
+negation          <- '!' _ t: term -> (format([' stack.push(state);', t, 
+	   'if (state) { stack.pop(); state = null; }',
+	   'else { state = stack.pop(); }']))
  .
 result_expression <- '->' _ result: expr _ -> (format(['if (valid) { state.val = ', result, '; }']))
  .
@@ -300,9 +301,16 @@ function parse_${n}(input, pos) {
          body, ' return state; }']))
 #+END_SRC
 
-#+NAME: C.rule_template
+#+NAME: CLANG.rule_template
 #+BEGIN_SRC js
 (format(['State parse_', n, '(str input, int pos) { State state = { .pos=pos }; Stack stack = {0}; ',
+         body, ' return state; }']))
+#+END_SRC
+
+#+NAME: C.rule_template
+#+BEGIN_SRC js
+(format(['function parse_', n, '(input, pos) { let state = { pos: pos }; let stack = []; ',
+         'let vars = {}',
          body, ' return state; }']))
 #+END_SRC
 
@@ -317,9 +325,14 @@ labeled_template:
 (format([value, ' if (state) { var ', label, ' = state.val; }']))
 #+END_SRC
 
-#+NAME: C.labeled_template
+#+NAME: CLANG.labeled_template
 #+BEGIN_SRC js
 (format([value, ' if (valid) { var("', label, '", state.val); }']))
+#+END_SRC
+
+#+NAME: C.labeled_template
+#+BEGIN_SRC js
+(format([value, ' if (state) { vars["', label, '"] = state.val; }']))
 #+END_SRC
 
 result_expr_template:
@@ -356,11 +369,18 @@ negation_template:
 	   'else { state = stack.pop(); }']))
 #+END_SRC
 
-#+NAME: C.negation_template
+#+NAME: CLANG.negation_template
 #+BEGIN_SRC js
   (format([' push(state);', t, 
 	   'if (valid) { pop(); state.null = true; }',
 	   'else { state = pop(); }']))
+#+END_SRC
+
+#+NAME: C.negation_template
+#+BEGIN_SRC js
+  (format([' stack.push(state);', t, 
+	   'if (state) { stack.pop(); state = null; }',
+	   'else { state = stack.pop(); }']))
 #+END_SRC
 
 choice_template:
@@ -378,13 +398,22 @@ choice_template:
 	      '} else { stack.pop(); }']))
 #+END_SRC
 
-#+NAME: C.choice_template
+#+NAME: CLANG.choice_template
 #+BEGIN_SRC js
      (format(['push(state); ',
 	      a,
 	      ' if (invalid) { state = pop(); ',
 	      b,
 	      '} else { pop(); }']))
+#+END_SRC
+
+#+NAME: C.choice_template
+#+BEGIN_SRC js
+     (format(['stack.push(state); ',
+	      a,
+	      ' if (!state) {state = stack.pop(); ',
+	      b,
+	      '} else { stack.pop(); }']))
 #+END_SRC
 
 string_template:
