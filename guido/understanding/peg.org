@@ -130,7 +130,7 @@ _               <- sp _
                   /    .
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
            vars["n"],
-           "(input, pos) { let state = { pos: pos }; let stack = []; ",
+           "(input, pos) { let state = { pos: pos }; ",
            "let vars = {}",
            vars["body"],
            " return state; }"]))
@@ -147,12 +147,20 @@ grammar           <- _ r: rule g: grammar -> (format([vars["r"], " ", vars["g"]]
        return { pos: pos + string.length, val: string };
      } else return null;
    }
-   let format = (parts) => parts.join('')
+
+   let stack = []
+
+   // let strbuf = new Uint8Array(65536)
+   let strbuf = []
+
+   let format = (parts) => {
+     return parts.join('')
+   }
    var fs = require(\'fs\');
    var grammarfile = process.argv.slice(2)[0];
    fs.readFile(grammarfile, function(err, data) {
        if (err) {
-	   throw err; 
+           throw err; 
        }
        var out = parse_grammar(data.toString(), 0);
        console.log(out.val);
@@ -179,9 +187,10 @@ term              <- labeled
 nonterminal       <- n: name _ -> (format(["state = parse_", vars["n"], "(input, state.pos);"]))
  .
 labeled           <- label: name _ ':' _ value: term -> (format([vars["value"],
-           " if (state) { vars[\"",
-           vars["label"],
-           "\"] = state.val; }"]))
+           " if (state) {",
+           " vars[\"", vars["label"], "\"] = state.val;",
+           " store_interect_key(\"label\", state.val);",
+           " }"]))
  .
 sequence          <- foo: term  bar: sequence -> (format([vars["foo"],
            " if (state) { ",
@@ -388,7 +397,7 @@ function parse_${n}(input, pos) {
 #+BEGIN_SRC js
   (format(["function parse_",
            vars["n"],
-           "(input, pos) { let state = { pos: pos }; let stack = []; ",
+           "(input, pos) { let state = { pos: pos }; ",
            "let vars = {}",
            vars["body"],
            " return state; }"]))
@@ -741,6 +750,8 @@ grammar_template2:
        return { pos: pos + string.length, val: string };
      } else return null;
    }
+
+   let stack = []
 
    // let strbuf = new Uint8Array(65536)
    let strbuf = []

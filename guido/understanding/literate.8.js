@@ -76,7 +76,7 @@ function parse_rule(input, pos) {
                             if (state) {
                                 if (state) state.val = (format(["function parse_",
                                     vars["n"],
-                                    "(input, pos) { let state = { pos: pos }; let stack = []; ",
+                                    "(input, pos) { let state = { pos: pos }; ",
                                     "let vars = {}",
                                     vars["body"],
                                     " return state; }"
@@ -133,12 +133,20 @@ function parse_grammar(input, pos) {
        return { pos: pos + string.length, val: string };
      } else return null;
    }
-   let format = (parts) => parts.join('')
+
+   let stack = []
+
+   // let strbuf = new Uint8Array(65536)
+   let strbuf = []
+
+   let format = (parts) => {
+     return parts.join('')
+   }
    var fs = require(\'fs\');
    var grammarfile = process.argv.slice(2)[0];
    fs.readFile(grammarfile, function(err, data) {
        if (err) {
-	   throw err; 
+           throw err; 
        }
        var out = parse_grammar(data.toString(), 0);
        console.log(out.val);

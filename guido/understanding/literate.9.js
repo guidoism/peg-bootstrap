@@ -2,7 +2,6 @@ function parse_sp(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = literal(input, state.pos, " ");
@@ -31,7 +30,6 @@ function parse__(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse_sp(input, state.pos);
@@ -52,7 +50,6 @@ function parse_rule(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = parse_name(input, state.pos);
     if (state) {
@@ -77,7 +74,7 @@ function parse_rule(input, pos) {
                                 if (state) {
                                     state.val = (format(["function parse_",
                                         vars["n"],
-                                        "(input, pos) { let state = { pos: pos }; let stack = []; ",
+                                        "(input, pos) { let state = { pos: pos }; ",
                                         "let vars = {}",
                                         vars["body"],
                                         " return state; }"
@@ -97,7 +94,6 @@ function parse_grammar(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse__(input, state.pos);
@@ -138,12 +134,20 @@ function parse_grammar(input, pos) {
        return { pos: pos + string.length, val: string };
      } else return null;
    }
-   let format = (parts) => parts.join('')
+
+   let stack = []
+
+   // let strbuf = new Uint8Array(65536)
+   let strbuf = []
+
+   let format = (parts) => {
+     return parts.join('')
+   }
    var fs = require(\'fs\');
    var grammarfile = process.argv.slice(2)[0];
    fs.readFile(grammarfile, function(err, data) {
        if (err) {
-	   throw err; 
+           throw err; 
        }
        var out = parse_grammar(data.toString(), 0);
        console.log(out.val);
@@ -163,7 +167,6 @@ function parse_meta(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = literal(input, state.pos, "!");
@@ -246,7 +249,6 @@ function parse_name(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse_namechar(input, state.pos);
@@ -279,7 +281,6 @@ function parse_namechar(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse_meta(input, state.pos);
@@ -312,7 +313,6 @@ function parse_term(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse_labeled(input, state.pos);
@@ -359,7 +359,6 @@ function parse_nonterminal(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = parse_name(input, state.pos);
     if (state) {
@@ -380,7 +379,6 @@ function parse_labeled(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = parse_name(input, state.pos);
     if (state) {
@@ -417,7 +415,6 @@ function parse_sequence(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse_term(input, state.pos);
@@ -464,7 +461,6 @@ function parse_string(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = literal(input, state.pos, "\'");
     if (state) {
@@ -494,7 +490,6 @@ function parse_stringcontents(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     stack.push(state);
@@ -578,7 +573,6 @@ function parse_choice(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     state = parse_sequence(input, state.pos);
@@ -622,7 +616,6 @@ function parse_negation(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = literal(input, state.pos, "!");
     if (state) {
@@ -650,7 +643,6 @@ function parse_result_expression(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = literal(input, state.pos, "->");
     if (state) {
@@ -680,7 +672,6 @@ function parse_expr(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = literal(input, state.pos, "(");
     if (state) {
@@ -707,7 +698,6 @@ function parse_exprcontents(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     stack.push(state);
     stack.push(state);
@@ -783,7 +773,6 @@ function parse_location(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = literal(input, state.pos, "§");
     if (state) {
@@ -803,7 +792,6 @@ function parse_parenthesized(input, pos) {
     let state = {
         pos: pos
     };
-    let stack = [];
     let vars = {}
     state = literal(input, state.pos, "(");
     if (state) {
@@ -846,7 +834,15 @@ function literal(input, pos, string) {
     }
     else return null;
 }
-let format = (parts) => parts.join('')
+
+let stack = []
+
+// let strbuf = new Uint8Array(65536)
+let strbuf = []
+
+let format = (parts) => {
+    return parts.join('')
+}
 var fs = require('fs');
 var grammarfile = process.argv.slice(2)[0];
 fs.readFile(grammarfile, function(err, data) {
