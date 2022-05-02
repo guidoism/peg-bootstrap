@@ -135,9 +135,11 @@ function parse_grammar(input, pos) {
    }
 
    let stack = []
+   let varbuf = new Uint32Array(4096)
+   let strbuf = new Uint8Array(65536)
 
-   // let strbuf = new Uint8Array(65536)
-   let strbuf = []
+   let push = (o) => stack.push(o)
+   let pop = () => stack.pop()
 
    let format = (parts) => {
      return parts.join('')
@@ -579,11 +581,11 @@ function parse_choice(input, pos) {
                     vars["b"] = state.val;
                 }
                 if (state) {
-                    if (state) state.val = (format(["stack.push(state); ",
+                    if (state) state.val = (format(["push(state); ",
                         vars["a"],
-                        " if (!state) {state = stack.pop(); ",
+                        " if (!state) {state = pop(); ",
                         vars["b"],
-                        "} else { stack.pop(); }"
+                        "} else { pop(); }"
                     ]));
                 }
             }
@@ -615,10 +617,10 @@ function parse_negation(input, pos) {
                 vars["t"] = state.val;
             }
             if (state) {
-                if (state) state.val = (format([" stack.push(state);",
+                if (state) state.val = (format([" push(state);",
                     vars["t"],
-                    "if (state) { stack.pop(); state = null; }",
-                    "else { state = stack.pop(); }"
+                    "if (state) { pop(); state = null; }",
+                    "else { state = pop(); }"
                 ]));
             }
         }

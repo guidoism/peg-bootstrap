@@ -149,9 +149,11 @@ grammar           <- _ r: rule g: grammar -> (format([vars["r"], " ", vars["g"]]
    }
 
    let stack = []
+   let varbuf = new Uint32Array(4096)
+   let strbuf = new Uint8Array(65536)
 
-   // let strbuf = new Uint8Array(65536)
-   let strbuf = []
+   let push = (o) => stack.push(o)
+   let pop = () => stack.pop()
 
    let format = (parts) => {
      return parts.join('')
@@ -189,7 +191,7 @@ nonterminal       <- n: name _ -> (format(["state = parse_", vars["n"], "(input,
 labeled           <- label: name _ ':' _ value: term -> (format([vars["value"],
            " if (state) {",
            " vars[\"", vars["label"], "\"] = state.val;",
-           " store_interect_key(\"label\", state.val);",
+           " varbuf[varindex] = ",
            " }"]))
  .
 sequence          <- foo: term  bar: sequence -> (format([vars["foo"],
@@ -210,17 +212,17 @@ stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([vars["c"]
  
                   /  -> ("")
  .
-choice            <- a: sequence '/' _  b: choice -> (format(["stack.push(state); ",
+choice            <- a: sequence '/' _  b: choice -> (format(["push(state); ",
 	      vars["a"],
-	      " if (!state) {state = stack.pop(); ",
+	      " if (!state) {state = pop(); ",
 	      vars["b"],
-	      "} else { stack.pop(); }"]))
+	      "} else { pop(); }"]))
  
                   / sequence   .
-negation          <- '!' _ t: term -> (format([" stack.push(state);",
+negation          <- '!' _ t: term -> (format([" push(state);",
             vars["t"], 
-            "if (state) { stack.pop(); state = null; }",
-            "else { state = stack.pop(); }"]))
+            "if (state) { pop(); state = null; }",
+            "else { state = pop(); }"]))
  .
 result_expression <- '->' _ result: expr _ -> (format(["if (state) { state.val = ",
            vars["result"],
@@ -440,7 +442,7 @@ labeled_template:
   (format([vars["value"],
            " if (state) {",
            " vars[\"", vars["label"], "\"] = state.val;",
-           " store_interect_key(\"label\", state.val);",
+           " varbuf[varindex] = ",
            " }"]))
 #+END_SRC
 
@@ -504,10 +506,10 @@ negation_template:
 
 #+NAME: D.negation_template
 #+BEGIN_SRC js
-   (format([" stack.push(state);",
+   (format([" push(state);",
             vars["t"], 
-            "if (state) { stack.pop(); state = null; }",
-            "else { state = stack.pop(); }"]))
+            "if (state) { pop(); state = null; }",
+            "else { state = pop(); }"]))
 #+END_SRC
 
 choice_template:
@@ -545,11 +547,11 @@ choice_template:
 
 #+NAME: D.choice_template
 #+BEGIN_SRC js
-     (format(["stack.push(state); ",
+     (format(["push(state); ",
 	      vars["a"],
-	      " if (!state) {state = stack.pop(); ",
+	      " if (!state) {state = pop(); ",
 	      vars["b"],
-	      "} else { stack.pop(); }"]))
+	      "} else { pop(); }"]))
 #+END_SRC
 
 string_template:
@@ -752,9 +754,11 @@ grammar_template2:
    }
 
    let stack = []
+   let varbuf = new Uint32Array(4096)
+   let strbuf = new Uint8Array(65536)
 
-   // let strbuf = new Uint8Array(65536)
-   let strbuf = []
+   let push = (o) => stack.push(o)
+   let pop = () => stack.pop()
 
    let format = (parts) => {
      return parts.join('')

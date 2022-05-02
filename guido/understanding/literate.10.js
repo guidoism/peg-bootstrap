@@ -3,25 +3,25 @@ function parse_sp(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = literal(input, state.pos, " ");
     if (state) {}
     if (!state) {
-        state = stack.pop();
-        stack.push(state);
+        state = pop();
+        push(state);
         state = literal(input, state.pos, "\n");
         if (state) {}
         if (!state) {
-            state = stack.pop();
+            state = pop();
             state = literal(input, state.pos, "\t");
             if (state) {}
         }
         else {
-            stack.pop();
+            pop();
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -31,17 +31,17 @@ function parse__(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse_sp(input, state.pos);
     if (state) {
         state = parse__(input, state.pos);
         if (state) {}
     }
     if (!state) {
-        state = stack.pop();
+        state = pop();
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -95,7 +95,7 @@ function parse_grammar(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse__(input, state.pos);
     if (state) {
         state = parse_rule(input, state.pos);
@@ -115,7 +115,7 @@ function parse_grammar(input, pos) {
         }
     }
     if (!state) {
-        state = stack.pop();
+        state = pop();
         state = parse__(input, state.pos);
         if (state) {
             state = parse_rule(input, state.pos);
@@ -136,9 +136,11 @@ function parse_grammar(input, pos) {
    }
 
    let stack = []
+   let varbuf = new Uint32Array(4096)
+   let strbuf = new Uint8Array(65536)
 
-   // let strbuf = new Uint8Array(65536)
-   let strbuf = []
+   let push = (o) => stack.push(o)
+   let pop = () => stack.pop()
 
    let format = (parts) => {
      return parts.join('')
@@ -158,7 +160,7 @@ function parse_grammar(input, pos) {
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -168,79 +170,79 @@ function parse_meta(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = literal(input, state.pos, "!");
     if (state) {}
     if (!state) {
-        state = stack.pop();
-        stack.push(state);
+        state = pop();
+        push(state);
         state = literal(input, state.pos, "\'");
         if (state) {}
         if (!state) {
-            state = stack.pop();
-            stack.push(state);
+            state = pop();
+            push(state);
             state = literal(input, state.pos, "<-");
             if (state) {}
             if (!state) {
-                state = stack.pop();
-                stack.push(state);
+                state = pop();
+                push(state);
                 state = literal(input, state.pos, "/");
                 if (state) {}
                 if (!state) {
-                    state = stack.pop();
-                    stack.push(state);
+                    state = pop();
+                    push(state);
                     state = literal(input, state.pos, ".");
                     if (state) {}
                     if (!state) {
-                        state = stack.pop();
-                        stack.push(state);
+                        state = pop();
+                        push(state);
                         state = literal(input, state.pos, "(");
                         if (state) {}
                         if (!state) {
-                            state = stack.pop();
-                            stack.push(state);
+                            state = pop();
+                            push(state);
                             state = literal(input, state.pos, ")");
                             if (state) {}
                             if (!state) {
-                                state = stack.pop();
-                                stack.push(state);
+                                state = pop();
+                                push(state);
                                 state = literal(input, state.pos, ":");
                                 if (state) {}
                                 if (!state) {
-                                    state = stack.pop();
+                                    state = pop();
                                     state = literal(input, state.pos, "->");
                                     if (state) {}
                                 }
                                 else {
-                                    stack.pop();
+                                    pop();
                                 }
                             }
                             else {
-                                stack.pop();
+                                pop();
                             }
                         }
                         else {
-                            stack.pop();
+                            pop();
                         }
                     }
                     else {
-                        stack.pop();
+                        pop();
                     }
                 }
                 else {
-                    stack.pop();
+                    pop();
                 }
             }
             else {
-                stack.pop();
+                pop();
             }
         }
         else {
-            stack.pop();
+            pop();
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -250,7 +252,7 @@ function parse_name(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse_namechar(input, state.pos);
     if (state) {
         vars["c"] = state.val;
@@ -267,12 +269,12 @@ function parse_name(input, pos) {
         }
     }
     if (!state) {
-        state = stack.pop();
+        state = pop();
         state = parse_namechar(input, state.pos);
         if (state) {}
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -282,24 +284,24 @@ function parse_namechar(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse_meta(input, state.pos);
     if (state) {
-        stack.pop();
+        pop();
         state = null;
     }
     else {
-        state = stack.pop();
+        state = pop();
     }
     if (state) {
-        stack.push(state);
+        push(state);
         state = parse_sp(input, state.pos);
         if (state) {
-            stack.pop();
+            pop();
             state = null;
         }
         else {
-            state = stack.pop();
+            state = pop();
         }
         if (state) {
             state = parse_char(input, state.pos);
@@ -314,43 +316,43 @@ function parse_term(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse_labeled(input, state.pos);
     if (state) {}
     if (!state) {
-        state = stack.pop();
-        stack.push(state);
+        state = pop();
+        push(state);
         state = parse_nonterminal(input, state.pos);
         if (state) {}
         if (!state) {
-            state = stack.pop();
-            stack.push(state);
+            state = pop();
+            push(state);
             state = parse_string(input, state.pos);
             if (state) {}
             if (!state) {
-                state = stack.pop();
-                stack.push(state);
+                state = pop();
+                push(state);
                 state = parse_negation(input, state.pos);
                 if (state) {}
                 if (!state) {
-                    state = stack.pop();
+                    state = pop();
                     state = parse_parenthesized(input, state.pos);
                     if (state) {}
                 }
                 else {
-                    stack.pop();
+                    pop();
                 }
             }
             else {
-                stack.pop();
+                pop();
             }
         }
         else {
-            stack.pop();
+            pop();
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -416,7 +418,7 @@ function parse_sequence(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse_term(input, state.pos);
     if (state) {
         vars["foo"] = state.val;
@@ -437,22 +439,22 @@ function parse_sequence(input, pos) {
         }
     }
     if (!state) {
-        state = stack.pop();
-        stack.push(state);
+        state = pop();
+        push(state);
         state = parse_result_expression(input, state.pos);
         if (state) {}
         if (!state) {
-            state = stack.pop();
+            state = pop();
             if (state) {
                 state.val = ("");
             }
         }
         else {
-            stack.pop();
+            pop();
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -491,25 +493,25 @@ function parse_stringcontents(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
-    stack.push(state);
+    push(state);
+    push(state);
     state = literal(input, state.pos, "\\");
     if (state) {
-        stack.pop();
+        pop();
         state = null;
     }
     else {
-        state = stack.pop();
+        state = pop();
     }
     if (state) {
-        stack.push(state);
+        push(state);
         state = literal(input, state.pos, "\'");
         if (state) {
-            stack.pop();
+            pop();
             state = null;
         }
         else {
-            state = stack.pop();
+            state = pop();
         }
         if (state) {
             state = parse_char(input, state.pos);
@@ -530,8 +532,8 @@ function parse_stringcontents(input, pos) {
         }
     }
     if (!state) {
-        state = stack.pop();
-        stack.push(state);
+        state = pop();
+        push(state);
         state = literal(input, state.pos, "\\");
         if (state) {
             vars["b"] = state.val;
@@ -554,17 +556,17 @@ function parse_stringcontents(input, pos) {
             }
         }
         if (!state) {
-            state = stack.pop();
+            state = pop();
             if (state) {
                 state.val = ("");
             }
         }
         else {
-            stack.pop();
+            pop();
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -574,7 +576,7 @@ function parse_choice(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
+    push(state);
     state = parse_sequence(input, state.pos);
     if (state) {
         vars["a"] = state.val;
@@ -590,11 +592,11 @@ function parse_choice(input, pos) {
                 }
                 if (state) {
                     if (state) {
-                        state.val = (format(["stack.push(state); ",
+                        state.val = (format(["push(state); ",
                             vars["a"],
-                            " if (!state) {state = stack.pop(); ",
+                            " if (!state) {state = pop(); ",
                             vars["b"],
-                            "} else { stack.pop(); }"
+                            "} else { pop(); }"
                         ]));
                     }
                 }
@@ -602,12 +604,12 @@ function parse_choice(input, pos) {
         }
     }
     if (!state) {
-        state = stack.pop();
+        state = pop();
         state = parse_sequence(input, state.pos);
         if (state) {}
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -627,10 +629,10 @@ function parse_negation(input, pos) {
             }
             if (state) {
                 if (state) {
-                    state.val = (format([" stack.push(state);",
+                    state.val = (format([" push(state);",
                         vars["t"],
-                        "if (state) { stack.pop(); state = null; }",
-                        "else { state = stack.pop(); }"
+                        "if (state) { pop(); state = null; }",
+                        "else { state = pop(); }"
                     ]));
                 }
             }
@@ -699,49 +701,49 @@ function parse_exprcontents(input, pos) {
         pos: pos
     };
     let vars = {}
-    stack.push(state);
-    stack.push(state);
-    stack.push(state);
+    push(state);
+    push(state);
+    push(state);
     state = literal(input, state.pos, "(");
     if (state) {
-        stack.pop();
+        pop();
         state = null;
     }
     else {
-        state = stack.pop();
+        state = pop();
     }
     if (state) {
-        stack.push(state);
+        push(state);
         state = literal(input, state.pos, ")");
         if (state) {
-            stack.pop();
+            pop();
             state = null;
         }
         else {
-            state = stack.pop();
+            state = pop();
         }
         if (state) {
-            stack.push(state);
+            push(state);
             state = parse_location(input, state.pos);
             if (state) {}
             if (!state) {
-                state = stack.pop();
+                state = pop();
                 state = parse_char(input, state.pos);
                 if (state) {}
             }
             else {
-                stack.pop();
+                pop();
             }
             if (state) {}
         }
     }
     if (!state) {
-        state = stack.pop();
+        state = pop();
         state = parse_expr(input, state.pos);
         if (state) {}
     }
     else {
-        stack.pop();
+        pop();
     }
     if (state) {
         vars["c"] = state.val;
@@ -758,13 +760,13 @@ function parse_exprcontents(input, pos) {
         }
     }
     if (!state) {
-        state = stack.pop();
+        state = pop();
         if (state) {
             state.val = ("");
         }
     }
     else {
-        stack.pop();
+        pop();
     }
     return state;
 }
@@ -836,9 +838,11 @@ function literal(input, pos, string) {
 }
 
 let stack = []
+let varbuf = new Uint32Array(4096)
+let strbuf = new Uint8Array(65536)
 
-// let strbuf = new Uint8Array(65536)
-let strbuf = []
+let push = (o) => stack.push(o)
+let pop = () => stack.pop()
 
 let format = (parts) => {
     return parts.join('')
