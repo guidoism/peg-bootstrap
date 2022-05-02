@@ -96,6 +96,17 @@ I'm trying to create a self-compiling PEG parser.
   output = output.replace('sps', '_')
   open('literate.d.peg', 'w').write(output)
 
+  out = []
+  for (name, larrow, body, rarrow, action, end) in rules:
+      if action and action[0] != '(':
+          d_action = f'D.{action}'
+          e_action = f'E.{action}'
+          action = blocks.get(e_action) or blocks.get(d_action) or 'NOT FOUND'
+      out.append(f"{name.ljust(name_size)} {larrow} {body} {rarrow} {action} {end}")
+  output = '\n'.join(out)
+  output = output.replace('sps', '_')
+  open('literate.e.peg', 'w').write(output)
+
   return output
 #+END_SRC
 
@@ -415,6 +426,15 @@ labeled_template:
            "\"] = state.val; }"]))
 #+END_SRC
 
+#+NAME: E.labeled_template
+#+BEGIN_SRC js
+  (format([vars["value"],
+           " if (state) {",
+           " vars[\"", vars["label"], "\"] = state.val;",
+           " store_interect_key(\"label\", state.val);",
+           " }"]))
+#+END_SRC
+
 result_expr_template:
 #+NAME: result_expr_template
 #+BEGIN_SRC js
@@ -721,12 +741,18 @@ grammar_template2:
        return { pos: pos + string.length, val: string };
      } else return null;
    }
-   let format = (parts) => parts.join('')
+
+   // let strbuf = new Uint8Array(65536)
+   let strbuf = []
+
+   let format = (parts) => {
+     return parts.join('')
+   }
    var fs = require(\'fs\');
    var grammarfile = process.argv.slice(2)[0];
    fs.readFile(grammarfile, function(err, data) {
        if (err) {
-	   throw err; 
+           throw err; 
        }
        var out = parse_grammar(data.toString(), 0);
        console.log(out.val);
