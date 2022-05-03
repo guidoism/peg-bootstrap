@@ -130,7 +130,7 @@ _               <- sp _
                   /    .
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
            getvar("n"),
-           "(input, pos) { ",
+           "(pos) { ",
            "let state = { pos: pos, valid: true }; ",
            "let vars = {}; ",
            "let getvar = (k) => vars[k]; ",
@@ -141,16 +141,17 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function p
 grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("g")]))
  
                   / _ r: rule -> (format(["// This is from a template in peg.org:\n", getvar("r"), 
-   ` function parse_char(input, pos) {
+   ` function parse_char(pos) {
      if (pos >= input.length) return { valid: false };
      return { pos: pos + 1, val: input.charAt(pos), valid: true };
    }
-   function literal(input, pos, string) {
+   function literal(pos, string) {
      if (input.substr(pos, string.length) === string) {
        return { pos: pos + string.length, val: string, valid: true };
      } else return { valid: false };
    }
 
+   let input = "";
    let stack = []
    let varbuf = new Uint32Array(4096)
    let strbuf = new Uint8Array(65536)
@@ -167,7 +168,8 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
        if (err) {
            throw err; 
        }
-       var out = parse_grammar(data.toString(), 0);
+       input = data.toString()
+       var out = parse_grammar(0);
        console.log(out.val);
    });`]))
  .
@@ -189,7 +191,7 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (format(["state = parse_", getvar("n"), "(input, state.pos);"]))
+nonterminal       <- n: name _ -> (format(["state = parse_", getvar("n"), "(state.pos);"]))
  .
 labeled           <- label: name _ ':' _ value: term -> (format([vars["value"],
            " if (state.valid) {",
@@ -204,7 +206,7 @@ sequence          <- foo: term  bar: sequence -> (format([getvar("foo"),
                   / result_expression   
                   /  -> ("")
  .
-string            <- '\'' s: stringcontents '\'' _ -> (format(["state = literal(input, state.pos, \"",
+string            <- '\'' s: stringcontents '\'' _ -> (format(["state = literal(state.pos, \"",
            getvar("s"),
            "\");"]))
  .
@@ -413,7 +415,7 @@ function parse_${n}(input, pos) {
 #+BEGIN_SRC js
   (format(["function parse_",
            getvar("n"),
-           "(input, pos) { ",
+           "(pos) { ",
            "let state = { pos: pos, valid: true }; ",
            "let vars = {}; ",
            "let getvar = (k) => vars[k]; ",
@@ -621,7 +623,7 @@ string_template:
 
 #+NAME: E.string_template
 #+BEGIN_SRC js
-  (format(["state = literal(input, state.pos, \"",
+  (format(["state = literal(state.pos, \"",
            getvar("s"),
            "\");"]))
 #+END_SRC
@@ -776,7 +778,7 @@ nonterminal_template:
 
 #+NAME: E.nonterminal_template
 #+BEGIN_SRC js
-(format(["state = parse_", getvar("n"), "(input, state.pos);"]))
+(format(["state = parse_", getvar("n"), "(state.pos);"]))
 #+END_SRC
 
 grammar_template1:
@@ -862,16 +864,17 @@ grammar_template2:
 #+NAME: E.grammar_template2
 #+BEGIN_SRC js
   (format(["// This is from a template in peg.org:\n", getvar("r"), 
-   ` function parse_char(input, pos) {
+   ` function parse_char(pos) {
      if (pos >= input.length) return { valid: false };
      return { pos: pos + 1, val: input.charAt(pos), valid: true };
    }
-   function literal(input, pos, string) {
+   function literal(pos, string) {
      if (input.substr(pos, string.length) === string) {
        return { pos: pos + string.length, val: string, valid: true };
      } else return { valid: false };
    }
 
+   let input = "";
    let stack = []
    let varbuf = new Uint32Array(4096)
    let strbuf = new Uint8Array(65536)
@@ -888,7 +891,8 @@ grammar_template2:
        if (err) {
            throw err; 
        }
-       var out = parse_grammar(data.toString(), 0);
+       input = data.toString()
+       var out = parse_grammar(0);
        console.log(out.val);
    });`]))
 #+END_SRC
