@@ -140,7 +140,7 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function p
  .
 grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("g")]))
  
-                  / _ r: rule -> (format(["// This is from a template in peg.org:\n", vars["r"], 
+                  / _ r: rule -> (format(["// This is from a template in peg.org:\n", getvar("r"), 
    ` function parse_char(input, pos) {
      if (pos >= input.length) return { valid: false };
      return { pos: pos + 1, val: input.charAt(pos), valid: true };
@@ -861,7 +861,7 @@ grammar_template2:
 
 #+NAME: E.grammar_template2
 #+BEGIN_SRC js
-  (format(["// This is from a template in peg.org:\n", vars["r"], 
+  (format(["// This is from a template in peg.org:\n", getvar("r"), 
    ` function parse_char(input, pos) {
      if (pos >= input.length) return { valid: false };
      return { pos: pos + 1, val: input.charAt(pos), valid: true };
