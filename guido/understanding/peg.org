@@ -129,13 +129,15 @@ sp                <- ' '
 _               <- sp _   
                   /    .
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
-           vars["n"],
+           getvar("n"),
            "(input, pos) { let state = { pos: pos }; ",
-           "let vars = {}",
-           vars["body"],
+           "let vars = {}; ",
+           "let getvar = (k) => vars[k]; ",
+           "let setvar = (k, v) => { vars[k] = v; } ",
+           getvar("body"),
            " return state; }"]))
  .
-grammar           <- _ r: rule g: grammar -> (format([vars["r"], " ", vars["g"]]))
+grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("g")]))
  
                   / _ r: rule -> (format(["// This is from a template in peg.org:\n", vars["r"], 
    ` function parse_char(input, pos) {
@@ -177,7 +179,7 @@ meta              <- '!'
                   / ')'   
                   / ':'   
                   / '->'   .
-name              <- c: namechar n: name -> (format([vars["c"], vars["n"]]))
+name              <- c: namechar n: name -> (format([getvar("c"), getvar("n")]))
  
                   / namechar   .
 namechar          <- !meta !sp char   .
@@ -186,57 +188,56 @@ term              <- labeled
                   / string   
                   / negation   
                   / parenthesized   .
-nonterminal       <- n: name _ -> (format(["state = parse_", vars["n"], "(input, state.pos);"]))
+nonterminal       <- n: name _ -> (format(["state = parse_", getvar("n"), "(input, state.pos);"]))
  .
 labeled           <- label: name _ ':' _ value: term -> (format([vars["value"],
            " if (state) {",
-           " vars[\"", vars["label"], "\"] = state.val;",
-           " varbuf[varindex] = ",
+           " setvar(\"", getvar("label"), "\", state.val);",
            " }"]))
  .
-sequence          <- foo: term  bar: sequence -> (format([vars["foo"],
+sequence          <- foo: term  bar: sequence -> (format([getvar("foo"),
            " if (state) { ",
-           vars["bar"],
+           getvar("bar"),
            " } "]))
  
                   / result_expression   
                   /  -> ("")
  .
 string            <- '\'' s: stringcontents '\'' _ -> (format(["state = literal(input, state.pos, \"",
-           vars["s"],
+           getvar("s"),
            "\");"]))
  .
-stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([vars["c"], vars["s"]]))
+stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([getvar("c"), getvar("s")]))
  
-                  / b: '\\' c: char s: stringcontents -> (format([vars["b"], vars["c"], vars["s"]]))
+                  / b: '\\' c: char s: stringcontents -> (format([getvar("b"), getvar("c"), getvar("s")]))
  
                   /  -> ("")
  .
 choice            <- a: sequence '/' _  b: choice -> (format(["push(state); ",
-	      vars["a"],
+	      getvar("a"),
 	      " if (!state) {state = pop(); ",
-	      vars["b"],
+	      getvar("b"),
 	      "} else { pop(); }"]))
  
                   / sequence   .
 negation          <- '!' _ t: term -> (format([" push(state);",
-            vars["t"], 
+            getvar("t"), 
             "if (state) { pop(); state = null; }",
             "else { state = pop(); }"]))
  .
 result_expression <- '->' _ result: expr _ -> (format(["if (state) { state.val = ",
-           vars["result"],
+           getvar("result"),
            "; }"]))
  .
-expr              <- '(' _ e: exprcontents ')' -> (format(["(", vars["e"], ")"]))
+expr              <- '(' _ e: exprcontents ')' -> (format(["(", getvar("e"), ")"]))
  .
-exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (format([vars["c"], vars["e"]]))
+exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (format([getvar("c"), getvar("e")]))
  
                   /  -> ("")
  .
 location          <- '§' n: name -> ("POOP")
  .
-parenthesized     <- '(' _ body: choice ')' _ -> (format([vars["body"]]))
+parenthesized     <- '(' _ body: choice ')' _ -> (format([getvar("body")]))
  .
 #+end_example
 
@@ -400,8 +401,22 @@ function parse_${n}(input, pos) {
   (format(["function parse_",
            vars["n"],
            "(input, pos) { let state = { pos: pos }; ",
-           "let vars = {}",
+           "let vars = {}; ",
+           "let getvar = (k) => vars[k]; ",
+           "let setvar = (k, v) => { vars[k] = v; }; ",
            vars["body"],
+           " return state; }"]))
+#+END_SRC
+
+#+NAME: E.rule_template
+#+BEGIN_SRC js
+  (format(["function parse_",
+           getvar("n"),
+           "(input, pos) { let state = { pos: pos }; ",
+           "let vars = {}; ",
+           "let getvar = (k) => vars[k]; ",
+           "let setvar = (k, v) => { vars[k] = v; } ",
+           getvar("body"),
            " return state; }"]))
 #+END_SRC
 
@@ -441,8 +456,7 @@ labeled_template:
 #+BEGIN_SRC js
   (format([vars["value"],
            " if (state) {",
-           " vars[\"", vars["label"], "\"] = state.val;",
-           " varbuf[varindex] = ",
+           " setvar(\"", getvar("label"), "\", state.val);",
            " }"]))
 #+END_SRC
 
@@ -468,6 +482,13 @@ result_expr_template:
 #+BEGIN_SRC js
   (format(["if (state) { state.val = ",
            vars["result"],
+           "; }"]))
+#+END_SRC
+
+#+NAME: E.result_expr_template
+#+BEGIN_SRC js
+  (format(["if (state) { state.val = ",
+           getvar("result"),
            "; }"]))
 #+END_SRC
 
@@ -508,6 +529,14 @@ negation_template:
 #+BEGIN_SRC js
    (format([" push(state);",
             vars["t"], 
+            "if (state) { pop(); state = null; }",
+            "else { state = pop(); }"]))
+#+END_SRC
+
+#+NAME: E.negation_template
+#+BEGIN_SRC js
+   (format([" push(state);",
+            getvar("t"), 
             "if (state) { pop(); state = null; }",
             "else { state = pop(); }"]))
 #+END_SRC
@@ -554,6 +583,15 @@ choice_template:
 	      "} else { pop(); }"]))
 #+END_SRC
 
+#+NAME: E.choice_template
+#+BEGIN_SRC js
+     (format(["push(state); ",
+	      getvar("a"),
+	      " if (!state) {state = pop(); ",
+	      getvar("b"),
+	      "} else { pop(); }"]))
+#+END_SRC
+
 string_template:
 #+NAME: string_template
 #+BEGIN_SRC js
@@ -576,6 +614,13 @@ string_template:
 #+BEGIN_SRC js
   (format(["state = literal(input, state.pos, \"",
            vars["s"],
+           "\");"]))
+#+END_SRC
+
+#+NAME: E.string_template
+#+BEGIN_SRC js
+  (format(["state = literal(input, state.pos, \"",
+           getvar("s"),
            "\");"]))
 #+END_SRC
 
@@ -606,6 +651,14 @@ sequence_template1:
            " } "]))
 #+END_SRC
 
+#+NAME: E.sequence_template1
+#+BEGIN_SRC js
+  (format([getvar("foo"),
+           " if (state) { ",
+           getvar("bar"),
+           " } "]))
+#+END_SRC
+
 sequence_template2:
 #+NAME: sequence_template2
 #+BEGIN_SRC js
@@ -628,6 +681,11 @@ stringcontents_template1:
 (format([vars["c"], vars["s"]]))
 #+END_SRC
 
+#+NAME: E.stringcontents_template1
+#+BEGIN_SRC js
+(format([getvar("c"), getvar("s")]))
+#+END_SRC
+
 stringcontents_template2:
 #+NAME: stringcontents_template2
 #+BEGIN_SRC js
@@ -637,6 +695,11 @@ stringcontents_template2:
 #+NAME: D.stringcontents_template2
 #+BEGIN_SRC js
 (format([vars["b"], vars["c"], vars["s"]]))
+#+END_SRC
+
+#+NAME: E.stringcontents_template2
+#+BEGIN_SRC js
+(format([getvar("b"), getvar("c"), getvar("s")]))
 #+END_SRC
 
 stringcontents_template3:
@@ -661,6 +724,11 @@ expr_template:
 (format(["(", vars["e"], ")"]))
 #+END_SRC
 
+#+NAME: E.expr_template
+#+BEGIN_SRC js
+(format(["(", getvar("e"), ")"]))
+#+END_SRC
+
 exprcontents_template1:
 #+NAME: exprcontents_template1
 #+BEGIN_SRC js
@@ -670,6 +738,11 @@ exprcontents_template1:
 #+NAME: D.exprcontents_template1
 #+BEGIN_SRC js
 (format([vars["c"], vars["e"]]))
+#+END_SRC
+
+#+NAME: E.exprcontents_template1
+#+BEGIN_SRC js
+(format([getvar("c"), getvar("e")]))
 #+END_SRC
 
 exprcontents_template2:
@@ -699,6 +772,11 @@ nonterminal_template:
 (format(["state = parse_", vars["n"], "(input, state.pos);"]))
 #+END_SRC
 
+#+NAME: E.nonterminal_template
+#+BEGIN_SRC js
+(format(["state = parse_", getvar("n"), "(input, state.pos);"]))
+#+END_SRC
+
 grammar_template1:
 #+NAME: grammar_template1
 #+BEGIN_SRC js
@@ -713,6 +791,11 @@ grammar_template1:
 #+NAME: D.grammar_template1
 #+BEGIN_SRC js
 (format([vars["r"], " ", vars["g"]]))
+#+END_SRC
+
+#+NAME: E.grammar_template1
+#+BEGIN_SRC js
+(format([getvar("r"), " ", getvar("g")]))
 #+END_SRC
 
 grammar_template2:
@@ -790,6 +873,11 @@ name_template:
 (format([vars["c"], vars["n"]]))
 #+END_SRC
 
+#+NAME: E.name_template
+#+BEGIN_SRC js
+(format([getvar("c"), getvar("n")]))
+#+END_SRC
+
 location_template:
 #+NAME: location_template
 #+BEGIN_SRC js
@@ -810,6 +898,11 @@ body_template:
 #+NAME: D.body_template
 #+BEGIN_SRC js
 (format([vars["body"]]))
+#+END_SRC
+
+#+NAME: E.body_template
+#+BEGIN_SRC js
+(format([getvar("body")]))
 #+END_SRC
 
 

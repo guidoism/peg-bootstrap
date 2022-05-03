@@ -77,7 +77,9 @@ function parse_rule(input, pos) {
                                 if (state) state.val = (format(["function parse_",
                                     vars["n"],
                                     "(input, pos) { let state = { pos: pos }; ",
-                                    "let vars = {}",
+                                    "let vars = {}; ",
+                                    "let getvar = (k) => vars[k]; ",
+                                    "let setvar = (k, v) => { vars[k] = v; }; ",
                                     vars["body"],
                                     " return state; }"
                                 ]));

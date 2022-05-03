@@ -2,7 +2,11 @@ function parse_sp(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = literal(input, state.pos, " ");
     if (state) {}
@@ -30,7 +34,11 @@ function parse__(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse_sp(input, state.pos);
     if (state) {
@@ -50,7 +58,11 @@ function parse_rule(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = parse_name(input, state.pos);
     if (state) {
         vars["n"] = state.val;
@@ -75,7 +87,9 @@ function parse_rule(input, pos) {
                                     state.val = (format(["function parse_",
                                         vars["n"],
                                         "(input, pos) { let state = { pos: pos }; ",
-                                        "let vars = {}",
+                                        "let vars = {}; ",
+                                        "let getvar = (k) => vars[k]; ",
+                                        "let setvar = (k, v) => { vars[k] = v; }; ",
                                         vars["body"],
                                         " return state; }"
                                     ]));
@@ -94,7 +108,11 @@ function parse_grammar(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse__(input, state.pos);
     if (state) {
@@ -169,7 +187,11 @@ function parse_meta(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = literal(input, state.pos, "!");
     if (state) {}
@@ -251,7 +273,11 @@ function parse_name(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse_namechar(input, state.pos);
     if (state) {
@@ -283,7 +309,11 @@ function parse_namechar(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse_meta(input, state.pos);
     if (state) {
@@ -315,7 +345,11 @@ function parse_term(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse_labeled(input, state.pos);
     if (state) {}
@@ -361,7 +395,11 @@ function parse_nonterminal(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = parse_name(input, state.pos);
     if (state) {
         vars["n"] = state.val;
@@ -381,7 +419,11 @@ function parse_labeled(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = parse_name(input, state.pos);
     if (state) {
         vars["label"] = state.val;
@@ -417,7 +459,11 @@ function parse_sequence(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse_term(input, state.pos);
     if (state) {
@@ -463,7 +509,11 @@ function parse_string(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = literal(input, state.pos, "\'");
     if (state) {
         state = parse_stringcontents(input, state.pos);
@@ -492,7 +542,11 @@ function parse_stringcontents(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     push(state);
     state = literal(input, state.pos, "\\");
@@ -575,7 +629,11 @@ function parse_choice(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     state = parse_sequence(input, state.pos);
     if (state) {
@@ -618,7 +676,11 @@ function parse_negation(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = literal(input, state.pos, "!");
     if (state) {
         state = parse__(input, state.pos);
@@ -645,7 +707,11 @@ function parse_result_expression(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = literal(input, state.pos, "->");
     if (state) {
         state = parse__(input, state.pos);
@@ -674,7 +740,11 @@ function parse_expr(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = literal(input, state.pos, "(");
     if (state) {
         state = parse__(input, state.pos);
@@ -700,7 +770,11 @@ function parse_exprcontents(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     push(state);
     push(state);
     push(state);
@@ -775,7 +849,11 @@ function parse_location(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = literal(input, state.pos, "§");
     if (state) {
         state = parse_name(input, state.pos);
@@ -794,7 +872,11 @@ function parse_parenthesized(input, pos) {
     let state = {
         pos: pos
     };
-    let vars = {}
+    let vars = {};
+    let getvar = (k) => vars[k];
+    let setvar = (k, v) => {
+        vars[k] = v;
+    };
     state = literal(input, state.pos, "(");
     if (state) {
         state = parse__(input, state.pos);

@@ -6,7 +6,9 @@ _               <- sp _
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
            vars["n"],
            "(input, pos) { let state = { pos: pos }; ",
-           "let vars = {}",
+           "let vars = {}; ",
+           "let getvar = (k) => vars[k]; ",
+           "let setvar = (k, v) => { vars[k] = v; }; ",
            vars["body"],
            " return state; }"]))
  .
