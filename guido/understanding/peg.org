@@ -161,15 +161,29 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
    let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
    let getvar_ = (fn, pos, k) => {
-     return vars2[varkey(fn, pos, k)]
+     let h = vars2[varkey(fn, pos, k)]
+     return getstr(h)
    }
    let setvar_ = (fn, pos, k, v) => {
-     vars2[varkey(fn, pos, k)] = v
+     let h = storestr(v)
+     vars2[varkey(fn, pos, k)] = h
+   }
+   let storestr = (s) => {
+     let handle = strbuf.length
+     strbuf.push(s.length)
+     s.split('').map(c => {
+       strbuf.push(c)
+     })
+     return handle
+   }
+   let getstr = (h) => {
+     let len = strbuf[h]
+     return strbuf.slice(h+1, h+1+len).join('')
    }
 
    let stack = []
    let varbuf = []
-   let strbuf = new ArrayBuffer(65536)
+   let strbuf = []
 
    let push = (o) => stack.push(o)
    let pop = () => stack.pop()
@@ -187,9 +201,8 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
        input = data.toString()
        var out = parse_grammar(0);
        console.log(out.val);
-       //varbuf.map(s => {
-       //  console.warn(s)
-       //})
+       console.warn('strbuf size:', strbuf.length)
+       console.warn('vars2 size:', Object.entries(vars2).length)
    });`]))
  .
 meta              <- '!'   
@@ -905,15 +918,29 @@ grammar_template2:
    let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
    let getvar_ = (fn, pos, k) => {
-     return vars2[varkey(fn, pos, k)]
+     let h = vars2[varkey(fn, pos, k)]
+     return getstr(h)
    }
    let setvar_ = (fn, pos, k, v) => {
-     vars2[varkey(fn, pos, k)] = v
+     let h = storestr(v)
+     vars2[varkey(fn, pos, k)] = h
+   }
+   let storestr = (s) => {
+     let handle = strbuf.length
+     strbuf.push(s.length)
+     s.split('').map(c => {
+       strbuf.push(c)
+     })
+     return handle
+   }
+   let getstr = (h) => {
+     let len = strbuf[h]
+     return strbuf.slice(h+1, h+1+len).join('')
    }
 
    let stack = []
    let varbuf = []
-   let strbuf = new ArrayBuffer(65536)
+   let strbuf = []
 
    let push = (o) => stack.push(o)
    let pop = () => stack.pop()
@@ -931,9 +958,8 @@ grammar_template2:
        input = data.toString()
        var out = parse_grammar(0);
        console.log(out.val);
-       //varbuf.map(s => {
-       //  console.warn(s)
-       //})
+       console.warn('strbuf size:', strbuf.length)
+       console.warn('vars2 size:', Object.entries(vars2).length)
    });`]))
 #+END_SRC
 
