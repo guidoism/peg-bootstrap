@@ -133,10 +133,8 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function p
            "(pos) { ",
            "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
-           "let getvar = (k) => ",
-           "{ return vars2[varkey(fn, pos, k)]; } ",
-           "let setvar = (k, v) => ",
-           "{ vars2[varkey(fn, pos, k)] = v; } ",
+           "let getvar = (k) => getvar_(fn, pos, k); ",
+           "let setvar = (k, v) => setvar_(fn, pos, k, v); ",
            getvar("body"),
            " return state; }"]))
  .
@@ -162,6 +160,13 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
 
    let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
+   let getvar_ = (fn, pos, k) => {
+     return vars2[varkey(fn, pos, k)]
+   }
+   let setvar_ = (fn, pos, k, v) => {
+     vars2[varkey(fn, pos, k)] = v
+   }
+
    let stack = []
    let varbuf = []
    let strbuf = new ArrayBuffer(65536)
@@ -432,10 +437,8 @@ function parse_${n}(input, pos) {
            "(pos) { ",
            "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
-           "let getvar = (k) => ",
-           "{ return vars2[varkey(fn, pos, k)]; } ",
-           "let setvar = (k, v) => ",
-           "{ vars2[varkey(fn, pos, k)] = v; } ",
+           "let getvar = (k) => getvar_(fn, pos, k); ",
+           "let setvar = (k, v) => setvar_(fn, pos, k, v); ",
            getvar("body"),
            " return state; }"]))
 #+END_SRC
@@ -901,6 +904,13 @@ grammar_template2:
 
    let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
+   let getvar_ = (fn, pos, k) => {
+     return vars2[varkey(fn, pos, k)]
+   }
+   let setvar_ = (fn, pos, k, v) => {
+     vars2[varkey(fn, pos, k)] = v
+   }
+
    let stack = []
    let varbuf = []
    let strbuf = new ArrayBuffer(65536)
