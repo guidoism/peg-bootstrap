@@ -134,9 +134,10 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function p
            "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
            "let vars = {}; ",
-           "let getvar = (k) => vars[k]; ",
+           "let getvar = (k) => ",
+           "{ return vars[varkey(fn, pos, k)]; } ",
            "let setvar = (k, v) => ",
-           "{ vars[k] = v; varbuf.push([fn, pos, k]) } ",
+           "{ vars[varkey(fn, pos, k)] = v; } ",
            getvar("body"),
            " return state; }"]))
  .
@@ -159,6 +160,9 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
      return fnnum
    }
    let input = ""
+
+   //let varkey = (fn, pos, k) => [fn, pos, k].join('-')
+   let varkey = (fn, pos, k) => k
    let stack = []
    let varbuf = []
    let strbuf = new ArrayBuffer(65536)
@@ -178,9 +182,9 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
        input = data.toString()
        var out = parse_grammar(0);
        console.log(out.val);
-       varbuf.map(s => {
-         console.warn(s)
-       })
+       //varbuf.map(s => {
+       //  console.warn(s)
+       //})
    });`]))
  .
 meta              <- '!'   
@@ -429,9 +433,10 @@ function parse_${n}(input, pos) {
            "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
            "let vars = {}; ",
-           "let getvar = (k) => vars[k]; ",
+           "let getvar = (k) => ",
+           "{ return vars[varkey(fn, pos, k)]; } ",
            "let setvar = (k, v) => ",
-           "{ vars[k] = v; varbuf.push([fn, pos, k]) } ",
+           "{ vars[varkey(fn, pos, k)] = v; } ",
            getvar("body"),
            " return state; }"]))
 #+END_SRC
@@ -894,6 +899,9 @@ grammar_template2:
      return fnnum
    }
    let input = ""
+
+   //let varkey = (fn, pos, k) => [fn, pos, k].join('-')
+   let varkey = (fn, pos, k) => k
    let stack = []
    let varbuf = []
    let strbuf = new ArrayBuffer(65536)
@@ -913,9 +921,9 @@ grammar_template2:
        input = data.toString()
        var out = parse_grammar(0);
        console.log(out.val);
-       varbuf.map(s => {
-         console.warn(s)
-       })
+       //varbuf.map(s => {
+       //  console.warn(s)
+       //})
    });`]))
 #+END_SRC
 
