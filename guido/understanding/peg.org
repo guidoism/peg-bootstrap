@@ -133,7 +133,6 @@ rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function p
            "(pos) { ",
            "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
-           "let vars2 = {}; ",
            "let getvar = (k) => ",
            "{ return vars2[varkey(fn, pos, k)]; } ",
            "let setvar = (k, v) => ",
@@ -161,6 +160,7 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
    }
    let input = ""
 
+   let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
    let stack = []
    let varbuf = []
@@ -432,7 +432,6 @@ function parse_${n}(input, pos) {
            "(pos) { ",
            "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
-           "let vars2 = {}; ",
            "let getvar = (k) => ",
            "{ return vars2[varkey(fn, pos, k)]; } ",
            "let setvar = (k, v) => ",
@@ -900,6 +899,7 @@ grammar_template2:
    }
    let input = ""
 
+   let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
    let stack = []
    let varbuf = []
