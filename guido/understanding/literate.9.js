@@ -153,10 +153,12 @@ function parse_grammar(input, pos) {
      } else return null;
    }
 
+   let fnnum = 0
+   let nextfn = () => {
+     fnnum += 1
+     return fnnum
+   }
    let stack = []
-   let varbuf = new Uint32Array(4096)
-   let strbuf = new Uint8Array(65536)
-
    let push = (o) => stack.push(o)
    let pop = () => stack.pop()
 
@@ -919,10 +921,12 @@ function literal(input, pos, string) {
     else return null;
 }
 
+let fnnum = 0
+let nextfn = () => {
+    fnnum += 1
+    return fnnum
+}
 let stack = []
-let varbuf = new Uint32Array(4096)
-let strbuf = new Uint8Array(65536)
-
 let push = (o) => stack.push(o)
 let pop = () => stack.pop()
 

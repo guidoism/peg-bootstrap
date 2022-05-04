@@ -131,10 +131,12 @@ _               <- sp _
 rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
            getvar("n"),
            "(pos) { ",
+           "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
            "let vars = {}; ",
            "let getvar = (k) => vars[k]; ",
-           "let setvar = (k, v) => { vars[k] = v; } ",
+           "let setvar = (k, v) => ",
+           "{ vars[k] = v; varbuf.push([fn, pos, k]) } ",
            getvar("body"),
            " return state; }"]))
  .
@@ -151,10 +153,15 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
      } else return { valid: false };
    }
 
-   let input = "";
+   let fnnum = 0
+   let nextfn = () => {
+     fnnum += 1
+     return fnnum
+   }
+   let input = ""
    let stack = []
-   let varbuf = new Uint32Array(4096)
-   let strbuf = new Uint8Array(65536)
+   let varbuf = []
+   let strbuf = new ArrayBuffer(65536)
 
    let push = (o) => stack.push(o)
    let pop = () => stack.pop()
@@ -171,6 +178,9 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
        input = data.toString()
        var out = parse_grammar(0);
        console.log(out.val);
+       varbuf.map(s => {
+         console.warn(s)
+       })
    });`]))
  .
 meta              <- '!'   
@@ -416,10 +426,12 @@ function parse_${n}(input, pos) {
   (format(["function parse_",
            getvar("n"),
            "(pos) { ",
+           "let fn = ", nextfn(), "; ",
            "let state = { pos: pos, valid: true }; ",
            "let vars = {}; ",
            "let getvar = (k) => vars[k]; ",
-           "let setvar = (k, v) => { vars[k] = v; } ",
+           "let setvar = (k, v) => ",
+           "{ vars[k] = v; varbuf.push([fn, pos, k]) } ",
            getvar("body"),
            " return state; }"]))
 #+END_SRC
@@ -840,10 +852,12 @@ grammar_template2:
      } else return null;
    }
 
+   let fnnum = 0
+   let nextfn = () => {
+     fnnum += 1
+     return fnnum
+   }
    let stack = []
-   let varbuf = new Uint32Array(4096)
-   let strbuf = new Uint8Array(65536)
-
    let push = (o) => stack.push(o)
    let pop = () => stack.pop()
 
@@ -874,10 +888,15 @@ grammar_template2:
      } else return { valid: false };
    }
 
-   let input = "";
+   let fnnum = 0
+   let nextfn = () => {
+     fnnum += 1
+     return fnnum
+   }
+   let input = ""
    let stack = []
-   let varbuf = new Uint32Array(4096)
-   let strbuf = new Uint8Array(65536)
+   let varbuf = []
+   let strbuf = new ArrayBuffer(65536)
 
    let push = (o) => stack.push(o)
    let pop = () => stack.pop()
@@ -894,6 +913,9 @@ grammar_template2:
        input = data.toString()
        var out = parse_grammar(0);
        console.log(out.val);
+       varbuf.map(s => {
+         console.warn(s)
+       })
    });`]))
 #+END_SRC
 
