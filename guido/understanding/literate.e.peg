@@ -1,0 +1,151 @@
+sp                <- ' '   
+                  / '\n'   
+                  / '\t'   .
+_               <- sp _   
+                  /    .
+rule              <- n: name _ '<-' _ body: choice '.' _ -> (format(["function parse_",
+           getvar("n"),
+           "(pos) { ",
+           "let fn = ", nextfn(), "; ",
+           "let state = { pos: pos, valid: true }; ",
+           "let getvar = (k) => getvar_(fn, pos, k); ",
+           "let setvar = (k, v) => setvar_(fn, pos, k, v); ",
+           getvar("body"),
+           " return state; }"]))
+ .
+grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("g")]))
+ 
+                  / _ r: rule -> (format(["// This is from a template in peg.org:\n", getvar("r"), 
+   ` function parse_char(pos) {
+     if (pos >= input.length) return { valid: false };
+     return { pos: pos + 1, val: input.charAt(pos), valid: true };
+   }
+   function literal(pos, string) {
+     if (input.substr(pos, string.length) === string) {
+       return { pos: pos + string.length, val: string, valid: true };
+     } else return { valid: false };
+   }
+
+   let fnnum = 0
+   let nextfn = () => {
+     fnnum += 1
+     return fnnum
+   }
+   let input = ""
+
+   let vars2 = {}
+   let varkey = (fn, pos, k) => [fn, pos, k].join('-')
+   let getvar_ = (fn, pos, k) => {
+     let h = vars2[varkey(fn, pos, k)]
+     return getstr(h)
+   }
+   let setvar_ = (fn, pos, k, v) => {
+     let h = storestr(v)
+     vars2[varkey(fn, pos, k)] = h
+   }
+   let storestr = (s) => {
+     let handle = strbuf.length
+     strbuf.push(s.length)
+     s.split('').map(c => {
+       strbuf.push(c)
+     })
+     return handle
+   }
+   let getstr = (h) => {
+     let len = strbuf[h]
+     return strbuf.slice(h+1, h+1+len).join('')
+   }
+
+   let stack = []
+   let varbuf = []
+   let strbuf = []
+
+   let push = (o) => stack.push(o)
+   let pop = () => stack.pop()
+
+   let format = (parts) => {
+     return parts.join('')
+   }
+
+   var fs = require(\'fs\');
+   var grammarfile = process.argv.slice(2)[0];
+   fs.readFile(grammarfile, function(err, data) {
+       if (err) {
+           throw err; 
+       }
+       input = data.toString()
+       var out = parse_grammar(0);
+       console.log(out.val);
+       console.warn('strbuf size:', strbuf.length)
+       console.warn('vars2 size:', Object.entries(vars2).length)
+   });`]))
+ .
+meta              <- '!'   
+                  / '\''   
+                  / '<-'   
+                  / '/'   
+                  / '.'   
+                  / '('   
+                  / ')'   
+                  / ':'   
+                  / '->'   .
+name              <- c: namechar n: name -> (format([getvar("c"), getvar("n")]))
+ 
+                  / namechar   .
+namechar          <- !meta !sp char   .
+term              <- labeled   
+                  / nonterminal   
+                  / string   
+                  / negation   
+                  / parenthesized   .
+nonterminal       <- n: name _ -> (format(["state = parse_", getvar("n"), "(state.pos);"]))
+ .
+labeled           <- label: name _ ':' _ value: term -> (format([getvar("value"),
+           " if (state.valid) {",
+           " setvar(\"", getvar("label"), "\", state.val);",
+           " }"]))
+ .
+sequence          <- foo: term  bar: sequence -> (format([getvar("foo"),
+           " if (state.valid) { ",
+           getvar("bar"),
+           " } "]))
+ 
+                  / result_expression   
+                  /  -> ("")
+ .
+string            <- '\'' s: stringcontents '\'' _ -> (format(["state = literal(state.pos, \"",
+           getvar("s"),
+           "\");"]))
+ .
+stringcontents    <- !'\\' !'\'' c: char s: stringcontents -> (format([getvar("c"), getvar("s")]))
+ 
+                  / b: '\\' c: char s: stringcontents -> (format([getvar("b"), getvar("c"), getvar("s")]))
+ 
+                  /  -> ("")
+ .
+choice            <- a: sequence '/' _  b: choice -> (format(["push(state); ",
+	      getvar("a"),
+	      " if (!state.valid) { state = pop(); ",
+	      getvar("b"),
+	      "} else { pop(); }"]))
+ 
+                  / sequence   .
+negation          <- '!' _ t: term -> (format([" push(state);",
+            getvar("t"), 
+            "if (state.valid) { pop(); state.valid = false; }",
+            "else { state = pop(); }"]))
+ .
+result_expression <- '->' _ result: expr _ -> (format(["if (state.valid) { state.val = ",
+           getvar("result"),
+           "; }"]))
+ .
+expr              <- '(' _ e: exprcontents ')' -> (format(["(", getvar("e"), ")"]))
+ .
+exprcontents      <- c: (!'(' !')' (location / char) / expr) e: exprcontents -> (format([getvar("c"), getvar("e")]))
+ 
+                  /  -> ("")
+ .
+location          <- '§' n: name -> ("POOP")
+ .
+parenthesized     <- '(' _ body: choice ')' _ -> (format([getvar("body")]))
+ .
