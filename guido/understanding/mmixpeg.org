@@ -13,8 +13,9 @@ strings and variables.
 ** Initialization
 #+name: initialization
 #+begin_src peg-template
-input   GREG 0
+input   GREG 0                 % Location of the input string
 state   GREG 0
+fn      IS   $0                % Set by each function to its function id
 VALID   IS   #8000000000000000 % One with a bunch of zeros
 #+end_src
 
@@ -59,7 +60,8 @@ where we are running the generating code.
 #+name: labeled
 #+begin_src peg-template
 <<value>>
-
+ BNN state,1F % Negative is valid, so skip to the end if it's not
+ 
 #+end_src
 
 
