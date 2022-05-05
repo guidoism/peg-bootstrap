@@ -7,6 +7,7 @@ and way to run it.
 #+begin_src peg-template
 input   GREG 0
 state   GREG 0
+VALID   IS   #8000000000000000 % One with a bunch of zeros
 #+end_src
 
 ** Rule
@@ -35,5 +36,5 @@ too little gain.
 #+begin_src peg-template
 parse_<<name>>  SET fn,<<new-fn>>   % Each function gets a unique id
                 OR  state,VALID,pos % Initialize state with valid flag and pos
-
+                
 #+end_src
