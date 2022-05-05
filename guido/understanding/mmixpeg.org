@@ -1,0 +1,39 @@
+This is an attempt to transform the low-level javascript code from
+peg.org to MMIX. I'd also like to come up with a better organization
+and way to run it.
+
+** Initialization
+#+name: initialization
+#+begin_src peg-template
+input   GREG 0
+state   GREG 0
+#+end_src
+
+** Rule
+
+The state object keeps track of: 1. Is this parse currently
+valid?, 2. What is the current position in the input?, and 3. Is there
+a value associated with the state?
+
+We will use a full octa for the state object and carefully select
+which bits get used for what purpose to ease testing with minimal
+bit shuffling.
+
+We will place the valid flag on the left-most bit allowing us to
+branch on negative (i.e., if state is negative then it's valid).
+
+We will place the pos on the right-most bits so we can just mask
+off the left bits to provide a useful pos.
+
+And value will go in the middle. Since we can't fit most strings in
+those few bytes in the middle we will use it as a handle or index into
+the string buffer. If it makes sense we might also include a flag and
+potentially inline short strings but that might be more complexity for
+too little gain.
+   
+#+name: rule
+#+begin_src peg-template
+parse_<<name>>  SET fn,<<new-fn>>   % Each function gets a unique id
+                OR  state,VALID,pos % Initialize state with valid flag and pos
+
+#+end_src

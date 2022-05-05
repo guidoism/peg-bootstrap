@@ -1,0 +1,21 @@
+This is an attempt to transform the low-level javascript code from
+peg.org to Zig. I'd also like to come up with a better organization
+and way to run it.
+
+#+name: setup
+#+begin_src zig :noweb yes
+  const State = packed struct {
+    valid: bool = true,
+    val: u24, // The offset into the string buffer
+    pos: u24, // The position in input
+  };
+#+end_src
+
+
+#+name: rule_template
+#+begin_src zig :noweb yes
+  fn parse_XXX(pos: i32) State {
+    
+
+  }
+#+end_src
