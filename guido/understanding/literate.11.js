@@ -161,15 +161,24 @@ function parse_grammar(input, pos) {
    }
    let input = ""
 
-   let vars2 = {}
    let varkey = (fn, pos, k) => [fn, pos, k].join('-')
    let getvar_ = (fn, pos, k) => {
-     let h = vars2[varkey(fn, pos, k)]
-     return getstr(h)
+     let kk = varkey(fn, pos, k)
+     let i = varbuf.length - 1
+     while (i >= 0) {
+       if (varbuf[i][0] === kk) {
+         let h = varbuf[i][1]
+         return getstr(h)
+       }
+       i -= 1
+     }
+     return null
    }
    let setvar_ = (fn, pos, k, v) => {
+     let kk = varkey(fn, pos, k)
      let h = storestr(v)
-     vars2[varkey(fn, pos, k)] = h
+     varbuf.push([kk, h])
+     vars2[kk] = h
    }
    let storestr = (s) => {
      let handle = strbuf.length
@@ -185,6 +194,7 @@ function parse_grammar(input, pos) {
    }
 
    let stack = []
+   let vars2 = {}
    let varbuf = []
    let strbuf = []
 
@@ -205,7 +215,7 @@ function parse_grammar(input, pos) {
        var out = parse_grammar(0);
        console.log(out.val);
        console.warn('strbuf size:', strbuf.length)
-       console.warn('vars2 size:', Object.entries(vars2).length)
+       console.warn('varbuf size:', varbuf.length)
    });`
                     ]));
                 }
