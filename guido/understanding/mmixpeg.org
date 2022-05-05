@@ -2,6 +2,10 @@ This is an attempt to transform the low-level javascript code from
 peg.org to MMIX. I'd also like to come up with a better organization
 and way to run it.
 
+We will tweak the original MMIXAL a bit to allow for more flexible
+code generation. The first change is that we will use the standard
+colon after the label name and ignore leading whitespace.
+
 ** Initialization
 #+name: initialization
 #+begin_src peg-template
@@ -34,7 +38,8 @@ too little gain.
    
 #+name: rule
 #+begin_src peg-template
-parse_<<name>>  SET fn,<<new-fn>>   % Each function gets a unique id
-                OR  state,VALID,pos % Initialize state with valid flag and pos
-                
+parse_<<name>>:  SET fn,<<new-fn>>   % Each function gets a unique id
+                 OR  state,VALID,pos % Initialize state with valid flag and pos
+                 <<body>>
+                 
 #+end_src
