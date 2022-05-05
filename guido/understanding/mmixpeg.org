@@ -6,6 +6,10 @@ We will tweak the original MMIXAL a bit to allow for more flexible
 code generation. The first change is that we will use the standard
 colon after the label name and ignore leading whitespace.
 
+It's not going to be easy to do string interpolation in assembly
+so we will generate a template language that includes line seperated
+strings and variables.
+
 ** Initialization
 #+name: initialization
 #+begin_src peg-template
@@ -16,6 +20,8 @@ VALID   IS   #8000000000000000 % One with a bunch of zeros
 
 ** Rule
 
+We will start with the /rule/ rule since it's the most interesting.
+   
 The state object keeps track of: 1. Is this parse currently
 valid?, 2. What is the current position in the input?, and 3. Is there
 a value associated with the state?
@@ -35,11 +41,25 @@ those few bytes in the middle we will use it as a handle or index into
 the string buffer. If it makes sense we might also include a flag and
 potentially inline short strings but that might be more complexity for
 too little gain.
-   
+
 #+name: rule
 #+begin_src peg-template
 parse_<<name>>:  SET fn,<<new-fn>>   % Each function gets a unique id
                  OR  state,VALID,pos % Initialize state with valid flag and pos
-                 <<body>>
-                 
+<<body>>
+                 POP 1,0             % Return to caller
 #+end_src
+
+** Labeled
+
+/Labeled/ is another interesting rule as it mixes setvar and getvar in
+both the context where we are generating the code to be generating and
+where we are running the generating code.
+   
+#+name: labeled
+#+begin_src peg-template
+<<value>>
+
+#+end_src
+
+
