@@ -175,7 +175,6 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
      let kk = varkey(fn, pos, k)
      let h = storestr(v)
      varbuf.push([kk, h])
-     vars2[kk] = h
    }
    let storestr = (s) => {
      let handle = strbuf.length
@@ -191,7 +190,6 @@ grammar           <- _ r: rule g: grammar -> (format([getvar("r"), " ", getvar("
    }
 
    let stack = []
-   let vars2 = {}
    let varbuf = []
    let strbuf = []
 
@@ -942,7 +940,6 @@ grammar_template2:
      let kk = varkey(fn, pos, k)
      let h = storestr(v)
      varbuf.push([kk, h])
-     vars2[kk] = h
    }
    let storestr = (s) => {
      let handle = strbuf.length
@@ -958,7 +955,6 @@ grammar_template2:
    }
 
    let stack = []
-   let vars2 = {}
    let varbuf = []
    let strbuf = []
 

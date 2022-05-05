@@ -178,7 +178,6 @@ function parse_grammar(input, pos) {
      let kk = varkey(fn, pos, k)
      let h = storestr(v)
      varbuf.push([kk, h])
-     vars2[kk] = h
    }
    let storestr = (s) => {
      let handle = strbuf.length
@@ -194,7 +193,6 @@ function parse_grammar(input, pos) {
    }
 
    let stack = []
-   let vars2 = {}
    let varbuf = []
    let strbuf = []
 
