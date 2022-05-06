@@ -17,6 +17,7 @@ input   GREG 0                 % Location of the input string
 state   GREG 0                 % Tuple of (valid, value, pos)
 key     GREG 0                 % String handle to the key to be saved
 value   GREG 0                 % String handle to the value to be saved
+varkey  GREG 0                 % Tuple of (fn, pos, key)
 fn      IS   $0                % Set by each function to its function id
 ret     IS   $1                % Used to save rJ during PUSHJ calls
 VALID   IS   #8000000000000000 % One with a bunch of zeros
@@ -64,14 +65,33 @@ where we are running the generating code.
 #+begin_src peg-template
 <<value>>
      BNN    state,1F      % Negative is valid, so skip to the end if it's not
-     SET    ret,rJ        % Save the current return address before the call
      SETSTR key,<<label>> % SETSTR is a /pseudo instruction/ that tells tangle
-                          % .to create a string in the data segment using the string
-                          % .in the variable and replace it with the octa handle.
-     ANDN   t,state,VALID % Mask out the valid bit by ANDing the complement of VALID
-     SR     value,t,24    % Shift the result to the proper place in the word
-     PUSHJ  ret,SetVar    % Set the variable
+                          % ..to create a string in the data segment using the string
+                          % ..in the variable and replace it with the octa handle.
+     PUSHJ  $0,RemVar     % Remember the variable
 1H:  
 #+end_src
 
+** RemVar
 
+/RemVar/ is a subroutine that associates a key and value with a the
+execution context of a function call, namely the function id and the
+position in the input. This is effectively the same as having a
+locally-scoped dictionary at the start of each function which is
+discarded when we pop the frame off the stack.
+
+Since the handle for the value is tucked nicely in the state we
+just let RemVar do the unpacking. 
+
+#+name: remvar
+#+begin_src peg-template
+RemVar: ANDN   value,state,VALID  % Mask out the valid bit by ANDing the complement of VALID
+        SRU    value,value,24     % Shift the result to the proper place in the word
+        SL     varkey,fn,24       % Shift fn onto the varkey leaving room for the pos
+        OR     varkey,varkey,pos  % Sprinkle the pos bits onto the back of the varkey
+        SL     varkey,varkey,24   % Shift over another 24 to make room for the key handle
+        OR     varkey,varkey,key  % Next do it with the key bits. Now we're done!
+        STOU   varkey,lastvar,8   % Store the key
+        STOU   value,lastvar,16   % Store the value
+        ADDU   lastvar,lastvar,16 % Increment lastvar
+#+end_src
