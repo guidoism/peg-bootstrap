@@ -10,6 +10,14 @@ It's not going to be easy to do string interpolation in assembly
 so we will generate a template language that includes line seperated
 strings and variables.
 
+The first time we run this through =literate.13.js= it will still use
+javascript to tie everything together. We are essentially going to
+replace the templates with ~format()~ with a more machine friendly
+templating mechanism.
+
+The next run after that will have to be entirely in MMIX, including
+all of the string handling and formating.
+
 ** Initialization
 #+name: initialization
 #+begin_src peg-template
@@ -60,7 +68,10 @@ parse_<<name>>:  SET fn,<<new-fn>>   % Each function gets a unique id
 /Labeled/ is another interesting rule as it mixes setvar and getvar in
 both the context where we are generating the code to be generating and
 where we are running the generating code.
-   
+
+It is used to save the part of a parse in order to use it later in a
+template. The /label/ is the name used to refer to it in the template.
+
 #+name: labeled
 #+begin_src peg-template
 <<value>>
@@ -113,6 +124,20 @@ I'm not sure what this will look like when we need to write it in
 MMIX. Err, maybe we should do that from the start.
 
 #+name: SETSTR
-#+begin_src python
+#+begin_src js
 #+end_src
 
+** Result Expression
+
+The /result expression/ is the action to be performed by the
+successful parsing of a rule. In the case of our meta parser
+the result is just to save the string for later use in other
+rules.
+   
+#+name: result_expression
+#+begin_src peg-template
+
+#+end_src
+
+
+   
