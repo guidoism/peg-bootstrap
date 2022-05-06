@@ -14,8 +14,11 @@ strings and variables.
 #+name: initialization
 #+begin_src peg-template
 input   GREG 0                 % Location of the input string
-state   GREG 0
+state   GREG 0                 % Tuple of (valid, value, pos)
+key     GREG 0                 % String handle to the key to be saved
+value   GREG 0                 % String handle to the value to be saved
 fn      IS   $0                % Set by each function to its function id
+ret     IS   $1                % Used to save rJ during PUSHJ calls
 VALID   IS   #8000000000000000 % One with a bunch of zeros
 #+end_src
 
@@ -60,8 +63,15 @@ where we are running the generating code.
 #+name: labeled
 #+begin_src peg-template
 <<value>>
- BNN state,1F % Negative is valid, so skip to the end if it's not
- 
+     BNN    state,1F      % Negative is valid, so skip to the end if it's not
+     SET    ret,rJ        % Save the current return address before the call
+     SETSTR key,<<label>> % SETSTR is a /pseudo instruction/ that tells tangle
+                          % .to create a string in the data segment using the string
+                          % .in the variable and replace it with the octa handle.
+     ANDN   t,state,VALID % Mask out the valid bit by ANDing the complement of VALID
+     SR     value,t,24    % Shift the result to the proper place in the word
+     PUSHJ  ret,SetVar    % Set the variable
+1H:  
 #+end_src
 
 
