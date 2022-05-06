@@ -108,7 +108,11 @@ For example:
 
 The code here will probably be called by the main tangler... but we'll
 see when the time comes.
-  
+
+I'm not sure what this will look like when we need to write it in
+MMIX. Err, maybe we should do that from the start.
+
 #+name: SETSTR
 #+begin_src python
 #+end_src
+
