@@ -60,7 +60,7 @@ files that we can use with the Makefile.
 
 To compile, we place our cursor inside of the code block and type
 
-  C-c C-c
+  =C-c C-c=
 
 This will save the files to this directory. It will also update the
 results in this file below with the last PEG, but this is only for
@@ -68,7 +68,7 @@ quick at-a-glance debugging -- We don't actually use that block.
 
 The next step is to go to the terminal and type:
 
-  make
+  =make=
   
 #+PROPERTY: header-args:python :var filename=(buffer-file-name)
 

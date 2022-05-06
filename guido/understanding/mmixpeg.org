@@ -83,7 +83,7 @@ discarded when we pop the frame off the stack.
 Since the handle for the value is tucked nicely in the state we
 just let RemVar do the unpacking. 
 
-#+name: remvar
+#+name: RemVar
 #+begin_src peg-template
 RemVar: ANDN   value,state,VALID  % Mask out the valid bit by ANDing the complement of VALID
         SRU    value,value,24     % Shift the result to the proper place in the word
@@ -94,4 +94,21 @@ RemVar: ANDN   value,state,VALID  % Mask out the valid bit by ANDing the complem
         STOU   varkey,lastvar,8   % Store the key
         STOU   value,lastvar,16   % Store the value
         ADDU   lastvar,lastvar,16 % Increment lastvar
+#+end_src
+
+** ~SETSTR~
+
+~SETSTR~ is a /pseudo instruction/ that tells tangle to create a string
+in the data segment using the string in the variable and replace it
+with the octa handle.
+
+For example:
+
+  =SETSTR key,<<label>>=
+
+The code here will probably be called by the main tangler... but we'll
+see when the time comes.
+  
+#+name: SETSTR
+#+begin_src python
 #+end_src
