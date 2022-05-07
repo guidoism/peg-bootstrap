@@ -154,7 +154,7 @@ failure.
 
 #+name: negation
 #+begin_src peg-template
-     STOL state,stack,0 % Push the current state onto the stack
+     STOU state,stack,0 % Push the current state onto the stack
      ADD  stack,stack,8 % ..
      
 #+end_src
