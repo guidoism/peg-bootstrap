@@ -136,10 +136,26 @@ rules.
    
 #+name: result_expression
 #+begin_src peg-template
-     BNN    state,1F      % Negative is valid, so skip to the end if it's not
-     
+     BNN    state,1F          % Negative is valid, so skip to the end if it's not
+     SET    key,<<key:result>>
+     PUSHJ  $0,GetVar         % GetVar places the value into the global value register
+     SL     value,value,24    % Move the value handle into the proper spot
+     OR     state,state,value % Plop it onto the state
 1H:
 #+end_src
+
+** Negation
+
+Negation is pretty easy to understand. We just save the current state,
+try the rule. If it succeeds then we throw away the success, pop the
+old state off the stack and return that. If it fails we return a
+failure.
+
+#+name: negation
+#+begin_src peg-template
+
+#+end_src
+
 
 ** NewLabel/LastLabel
 
